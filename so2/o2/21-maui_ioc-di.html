@@ -1,0 +1,413 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width,initial-scale=1">
+    <title>Maui - Inversion of Control &amp; Dependency Injection :: Softwareontwerp 2 (BETA)</title>
+    <meta name="generator" content="Antora 3.1.14">
+    <link rel="stylesheet" href="../_/css/site.css">
+  </head>
+  <body class="article">
+<header class="header">
+  <nav class="navbar">
+    <div class="navbar-brand">
+      <a class="navbar-item" href="#">Softwareontwerp 2 (BETA)</a>
+      <button class="navbar-burger" aria-controls="topbar-nav" aria-expanded="false" aria-label="Toggle main menu">
+        <span></span>
+        <span></span>
+        <span></span>
+      </button>
+    </div>
+      
+    <div id="topbar-nav" class="navbar-menu">
+      <div class="navbar-end">
+          <div class="navbar-item has-dropdown is-hoverable">
+              <a class="navbar-link" href="#">Producten</a>
+              <div class="navbar-dropdown">
+                  <a class="navbar-item" target="_blank" href="https://learn.microsoft.com/en-us/cli/azure/">Azure CLI</a>
+                  <a class="navbar-item" target="_blank" href="https://www.docker.com/products/docker-desktop">Docker Desktop</a>
+                  <a class="navbar-item" target="_blank" href="https://desktop.github.com/download">GitHub Desktop</a>
+                  <a class="navbar-item" target="_blank" href="https://www.mysql.com/products/workbench">MySQL Workbench</a>
+                  <a class="navbar-item" target="_blank" href="https://www.postman.com/downloads/">Postman</a>
+                  <a class="navbar-item" target="_blank" href="https://www.jetbrains.com/rider/download">Rider</a>
+                  <a class="navbar-item" target="_blank" href="https://code.visualstudio.com/download">VS Code</a>
+              </div>
+          </div>
+          <div class="navbar-item has-dropdown is-hoverable">
+              <a class="navbar-link" href="#">Diensten</a>
+              <div class="navbar-dropdown">
+                  <a class="navbar-item" target="_blank" href="https://dev.azure.com/hogent-web4-stefancourteaux/">Azure DevOps</a>
+                  <a class="navbar-item" target="_blank" href="https://portal.azure.com">Azure Portal</a>
+                  <a class="navbar-item" target="_blank" href="https://chamilo.hogent.be">Chamilo</a>
+                  <a class="navbar-item" target="_blank" href="https://github.com">GitHub</a>
+                  <a class="navbar-item" target="_blank" href="https://jwt.io">JWT.io</a>                  
+                  <a class="navbar-item" target="_blank" href="https://dotnet.microsoft.com">MS Docs</a>
+              </div>
+          </div>
+      </div>
+    </div>
+  </nav>
+</header>
+<div class="body">
+<div class="nav-container" data-component="o2" data-version="">
+  <aside class="nav">
+    <div class="panels">
+<div class="nav-panel-menu is-active" data-panel="menu">
+  <nav class="nav-menu">
+    <button class="nav-menu-toggle" aria-label="Toggle expand/collapse all" style="display: none"></button>
+    <h3 class="title"><a href="index.html">Ontwerp 2</a></h3>
+<ul class="nav-list">
+      <li class="nav-item is-active" data-depth="0">
+<ul class="nav-list">
+      <li class="nav-item is-active" data-depth="1">
+    <button class="nav-item-toggle"></button>
+    <span class="nav-text">Basis OO Ontwerp</span>
+<ul class="nav-list">
+      <li class="nav-item is-active" data-depth="2">
+    <a class="nav-link" href="01-klassen-objecten.html">Klassen &amp; Objecten</a>
+  </li>
+      <li class="nav-item is-active" data-depth="2">
+    <a class="nav-link" href="02-DCD-Overerving.html">DCD &amp; Overerving</a>
+  </li>
+      <li class="nav-item is-active" data-depth="2">
+    <a class="nav-link" href="03-RDD-GRASP.html">GRASP &amp; SSD</a>
+  </li>
+      <li class="nav-item is-active" data-depth="2">
+    <a class="nav-link" href="04-opdracht.html">Oefening Scheepvaart</a>
+  </li>
+</ul>
+  </li>
+      <li class="nav-item is-active" data-depth="1">
+    <button class="nav-item-toggle"></button>
+    <span class="nav-text">Design Patterns &amp; Refactoring</span>
+<ul class="nav-list">
+      <li class="nav-item is-active" data-depth="2">
+    <a class="nav-link" href="11-patterns-game.html">State Pattern (2 Lessen)</a>
+  </li>
+      <li class="nav-item is-active" data-depth="2">
+    <a class="nav-link" href="14-observer.html">Observer Pattern</a>
+  </li>
+      <li class="nav-item is-active" data-depth="2">
+    <a class="nav-link" href="12-opdracht.html">Groepswerk</a>
+  </li>
+      <li class="nav-item is-active" data-depth="2">
+    <a class="nav-link" href="13-presentaties.html">Presentaties</a>
+  </li>
+</ul>
+  </li>
+      <li class="nav-item is-active" data-depth="1">
+    <button class="nav-item-toggle"></button>
+    <span class="nav-text">Architectuur</span>
+<ul class="nav-list">
+      <li class="nav-item is-active" data-depth="2">
+    <a class="nav-link" href="#20-workshop.adoc">Workshop</a>
+  </li>
+      <li class="nav-item is-active" data-depth="2">
+    <a class="nav-link" href="#21-restful.adoc">RESTful API&#8217;s</a>
+  </li>
+      <li class="nav-item is-active" data-depth="2">
+    <a class="nav-link" href="#22-concepten.adoc">Concepten</a>
+  </li>
+</ul>
+  </li>
+</ul>
+  </li>
+</ul>
+  </nav>
+</div>
+<div class="nav-panel-explore" data-panel="explore">
+  <div class="context">
+    <span class="title">Ontwerp 2</span>
+    <span class="version"></span>
+  </div>
+  <ul class="components">
+    <li class="component is-current">
+      <div class="title"><a href="index.html">Ontwerp 2</a></div>
+    </li>
+  </ul>
+</div>
+    </div>
+  </aside>
+</div>
+<main class="article">
+<div class="toolbar" role="navigation">
+<button class="nav-toggle"></button>
+<nav class="breadcrumbs" aria-label="breadcrumbs">
+  <ul>
+    <li><a href="index.html">Ontwerp 2</a></li>
+    <li><a href="21-maui_ioc-di.html">Maui - Inversion of Control &amp; Dependency Injection</a></li>
+  </ul>
+</nav>
+</div>
+  <div class="content">
+<aside class="toc sidebar" data-title="Contents" data-levels="2">
+  <div class="toc-menu"></div>
+</aside>
+<article class="doc">
+<h1 class="page">Maui - Inversion of Control &amp; Dependency Injection</h1>
+<div id="toc" class="toc">
+<div id="toctitle">Table of Contents</div>
+<ul class="sectlevel1">
+<li><a href="#_inversion_of_control_ioc">Inversion of Control (IoC)</a>
+<ul class="sectlevel2">
+<li><a href="#_klassiek_voorbeeld">Klassiek voorbeeld</a></li>
+<li><a href="#_het_probleem">Het probleem</a></li>
+<li><a href="#_een_oplossing">Een oplossing</a></li>
+<li><a href="#_voordelen">Voordelen</a></li>
+<li><a href="#_samenvatting">Samenvatting</a></li>
+</ul>
+</li>
+<li><a href="#_dependency_injection_di">Dependency Injection (DI)</a></li>
+<li><a href="#_registratie">Registratie</a></li>
+<li><a href="#_injectie">Injectie</a></li>
+<li><a href="#_oefening">Oefening</a></li>
+<li><a href="#_take_it_further">Take it further</a></li>
+</ul>
+</div>
+<div class="sect1">
+<h2 id="_inversion_of_control_ioc"><a class="anchor" href="#_inversion_of_control_ioc"></a>Inversion of Control (IoC)</h2>
+<div class="sectionbody">
+<div class="paragraph">
+<p>Inversion of Control (IoC) is een ontwerppatroon dat bepaalt wie de "controle" heeft over de flow van een programma.
+In traditionele code beslist de ontwikkelaar zelf wat er gebeurt: welke objecten worden aangemaakt, wanneer ze gebruikt worden, en hoe ze samenwerken. Bij IoC wordt die controle gedeeltelijk uit handen gegeven.</p>
+</div>
+<div class="sect2">
+<h3 id="_klassiek_voorbeeld"><a class="anchor" href="#_klassiek_voorbeeld"></a>Klassiek voorbeeld</h3>
+<div class="listingblock">
+<div class="content">
+<pre class="highlightjs highlight"><code class="language-csharp hljs" data-lang="csharp">var service = new ProductService();
+service.SaveProduct("Apple");</code></pre>
+</div>
+</div>
+<div class="paragraph">
+<p>Met als <code>ProductService</code>:</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="highlightjs highlight"><code class="language-csharp hljs" data-lang="csharp">public class ProductService
+{
+    private readonly ProductRepository _repository = new ProductRepository();
+
+    public void SaveProduct(string name)
+    {
+        if (!IsValid(name))
+            return;
+
+        _repository.SaveProduct(name);
+    }
+
+    private bool IsValid(string name)
+    {
+        return !string.IsNullOrWhiteSpace(name);
+    }
+}</code></pre>
+</div>
+</div>
+<div class="paragraph">
+<p>Dit ontwerp is op het eerste gezicht goed gestructureerd: verschillende klassen hebben hun eigen verantwoordelijkheid, we hebben een <code>ProductService</code> die de logica bevat om een product op te slaan, en een <code>ProductRepository</code> dat instaat voor de connectie met de database.</p>
+</div>
+</div>
+<div class="sect2">
+<h3 id="_het_probleem"><a class="anchor" href="#_het_probleem"></a>Het probleem</h3>
+<div class="paragraph">
+<p>De <code>ProductService</code> beslist zelf <strong>welke</strong> repository ze gebruikt en <strong>wanneer</strong> die wordt aangemaakt.
+Dat betekent dat <code>ProductService</code> een sterke afhankelijkheid heeft van een specifieke implementatie (<code>ProductRepository</code>).
+Dit beperkt onze flexibiliteit.</p>
+</div>
+</div>
+<div class="sect2">
+<h3 id="_een_oplossing"><a class="anchor" href="#_een_oplossing"></a>Een oplossing</h3>
+<div class="paragraph">
+<p>Zou het niet handiger zijn als de <code>ProductService</code> eenvoudigweg een repository <strong>ontvangt</strong> in plaats van er zelf een te maken?</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="highlightjs highlight"><code class="language-csharp hljs" data-lang="csharp">public class ProductService
+{
+    private readonly IProductRepository _repository;
+
+    public ProductService(IProductRepository repository)
+    {
+        _repository = repository;
+    }
+
+    public void SaveProduct(string name)
+    {
+        if (!IsValid(name))
+            return;
+
+        _repository.SaveProduct(name);
+    }
+
+    private bool IsValid(string name)
+    {
+        return !string.IsNullOrWhiteSpace(name);
+    }
+}</code></pre>
+</div>
+</div>
+</div>
+<div class="sect2">
+<h3 id="_voordelen"><a class="anchor" href="#_voordelen"></a>Voordelen</h3>
+<div class="paragraph">
+<p>Op deze manier is het aan de <strong>aanroeper</strong> van <code>ProductService</code> om een geldige implementatie van <code>IProductRepository</code> te voorzien.
+Dat heeft verschillende voordelen:</p>
+</div>
+<div class="ulist">
+<ul>
+<li>
+<p>We kunnen tijdens <strong>unit tests</strong> eenvoudig een <strong>mock</strong> of <strong>fake</strong> implementatie van <code>IProductRepository</code> gebruiken.</p>
+</li>
+<li>
+<p>Verschillende klassen kunnen <strong>dezelfde</strong> instantie van <code>IProductRepository</code> delen, wat bijvoorbeeld caching ten goede komt.</p>
+</li>
+<li>
+<p>De code is <strong>losser gekoppeld</strong>: <code>ProductService</code> kent enkel de interface, niet de concrete implementatie.</p>
+</li>
+</ul>
+</div>
+</div>
+<div class="sect2">
+<h3 id="_samenvatting"><a class="anchor" href="#_samenvatting"></a>Samenvatting</h3>
+<div class="paragraph">
+<p>Door het aanmaken van afhankelijkheden te verplaatsen naar een extern systeem (de aanroeper), geven we de controle deels uit handen — dat is de kern van <strong>Inversion of Control</strong>.</p>
+</div>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="_dependency_injection_di"><a class="anchor" href="#_dependency_injection_di"></a>Dependency Injection (DI)</h2>
+<div class="sectionbody">
+<div class="paragraph">
+<p>Dependency Injection (DI) is een concrete manier om Inversion of Control te realiseren.
+In plaats van dat een klasse haar dependencies maakt, krijgt ze die van buitenaf mee.
+De omgeving die deze objecten aanmaakt en bij elkaar brengt noemen we een container.</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="highlightjs highlight"><code class="language-csharp hljs" data-lang="csharp">var repo = new ProductRepository();
+var service = new ProductService(repo);</code></pre>
+</div>
+</div>
+<div class="paragraph">
+<p>De aanroeper bepaalt wat er wordt geïnjecteerd.
+De klasse zelf blijft vrij van harde koppelingen, waardoor ze testbaar, uitbreidbaar en duidelijker wordt.</p>
+</div>
+<div class="paragraph">
+<p>DI is dus geen doel op zich, maar een techniek om Inversion of Control correct toe te passen.</p>
+</div>
+<div class="paragraph">
+<p>MAUI bevat een ingebouwde DI-container. We hoeven zelf geen container te schrijven, en we hoeven ook niet elk object manueel door te geven.
+MauiProgram.cs biedt een centrale plaats waar we services kunnen registreren, waarna MAUI ze automatisch aanmaakt en injecteert.</p>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="_registratie"><a class="anchor" href="#_registratie"></a>Registratie</h2>
+<div class="sectionbody">
+<div class="paragraph">
+<p>In MauiProgram.cs registreren we onze services.</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="highlightjs highlight"><code class="language-csharp hljs" data-lang="csharp">public static class MauiProgram
+{
+    public static MauiApp CreateMauiApp()
+    {
+        var builder = MauiApp.CreateBuilder();
+
+        builder.UseMauiApp&lt;App&gt;();
+
+        builder.Services.AddTransient&lt;JokeService&gt;();
+        //builder.Services.AddSingleton&lt;JokeService&gt;();
+        //builder.Services.AddScoped&lt;JokeService&gt;();
+
+        return builder.Build();
+    }
+}</code></pre>
+</div>
+</div>
+<div class="paragraph">
+<p>We vertellen hiermee aan MAUI welke klassen het moet beheren. Vanaf dan wordt JokeService centraal aangemaakt, en overal waar het nodig is automatisch meegegeven.</p>
+</div>
+<div class="admonitionblock note">
+<table>
+<tr>
+<td class="icon">
+<i class="fa icon-note" title="Note"></i>
+</td>
+<td class="content">
+<strong>AddTransient</strong>: Er wordt telkens een nieuwe instantie aangemaakt wanneer de service wordt opgevraagd.<br>
+<strong>AddSingleton</strong>: Er wordt één enkele instantie aangemaakt voor de volledige duur van de applicatie. Iedereen die deze service opvraagt, krijgt dezelfde instantie.<br>
+<strong>AddScoped</strong>: Er wordt één instantie aangemaakt per "scope". In MAUI speelt dit geen rol, omdat MAUI (in tegenstelling tot ASP.NET) geen natuurlijke scopes heeft zoals een web request. In webontwikkeling betekent dit: één instantie per http-request.
+</td>
+</tr>
+</table>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="_injectie"><a class="anchor" href="#_injectie"></a>Injectie</h2>
+<div class="sectionbody">
+<div class="paragraph">
+<p>Wanneer MAUI een pagina maakt, onderzoekt het welke constructorparameters nodig zijn.
+Vindt het een JokeService, dan haalt het die uit de container en geeft hem mee.</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="highlightjs highlight"><code class="language-csharp hljs" data-lang="csharp">public partial class MainPage : ContentPage
+{
+    private readonly JokeService _service;
+
+    public MainPage(JokeService service)
+    {
+        InitializeComponent();
+        _service = service;
+    }
+
+    private void Button_Clicked(object sender, EventArgs e)
+    {
+        var joke = _service.GetRandomJoke();
+        outputLabel.Text = joke;
+    }
+}</code></pre>
+</div>
+</div>
+<div class="paragraph">
+<p>Hier wordt duidelijk hoe MAUI Inversion of Control toepast:
+niet de pagina beslist welke JokeService gebruikt wordt, maar MAUI bepaalt wat er wordt ingeïnjecteerd.</p>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="_oefening"><a class="anchor" href="#_oefening"></a>Oefening</h2>
+<div class="sectionbody">
+<div class="paragraph">
+<p>In de oefening van vorige week maakten we een aparte klasse die verantwoordelijk is voor de grappen. Refactor nu de oefening van vorige week zodat deze aparte klasse via DI gebruikt wordt.</p>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="_take_it_further"><a class="anchor" href="#_take_it_further"></a>Take it further</h2>
+<div class="sectionbody">
+<div class="paragraph">
+<p>We kunnen nu ook een DadJokeService toevoegen die dezelfde interface implementeert. Door deze service te registreren in onze DI-container in plaats van de bestaande JokeService, schakelt de applicatie probleemloos over naar een andere bron van grappen, zonder dat we elders code moeten aanpassen.</p>
+</div>
+<div class="paragraph">
+<p>We kunnen nog een stap verder gaan door onze JokeService zelf afhankelijk te maken van een andere component, bijvoorbeeld een repository. Op die manier wordt het ontwerp nog flexibeler en blijft elke verantwoordelijkheid netjes gescheiden.</p>
+</div>
+</div>
+</div>
+</article>
+  </div>
+</main>
+</div>
+<footer class="footer">
+  <p>This page was built using a customized version of the Antora default UI.</p>
+  <p>The source code for the default UI is licensed under the terms of the MPL-2.0 license.</p>
+    <p>Content by Stefan Courteaux unless otherwise noted. </p>
+</footer>
+<script id="site-script" src="../_/js/site.js" data-ui-root-path="../_"></script>
+<script async src="../_/js/vendor/highlight.js"></script>
+  </body>
+</html>
