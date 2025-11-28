@@ -3,7 +3,7 @@
   <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width,initial-scale=1">
-    <title>Maui - WebAPI :: Softwareontwerp 2 (BETA)</title>
+    <title>Object Oriënted Programming :: Softwareontwerp 2 (BETA)</title>
     <meta name="generator" content="Antora 3.1.14">
     <link rel="stylesheet" href="../_/css/site.css">
   </head>
@@ -84,7 +84,7 @@
       <li class="nav-item is-active" data-depth="2">
     <a class="nav-link" href="11-monogame-statemachine.html">State Machine</a>
   </li>
-      <li class="nav-item is-active" data-depth="2">
+      <li class="nav-item is-active is-current-page" data-depth="2">
     <a class="nav-link" href="12-monogame-more_oo.html">Objectgeoriënteerd</a>
   </li>
 </ul>
@@ -123,7 +123,8 @@
 <nav class="breadcrumbs" aria-label="breadcrumbs">
   <ul>
     <li><a href="index.html">Softwareontwerp 2</a></li>
-    <li><a href="23-maui_webapi.html">Maui - WebAPI</a></li>
+    <li>MonoGame</li>
+    <li><a href="12-monogame-more_oo.html">Objectgeoriënteerd</a></li>
   </ul>
 </nav>
 </div>
@@ -132,13 +133,54 @@
   <div class="toc-menu"></div>
 </aside>
 <article class="doc">
-<h1 class="page">Maui - WebAPI</h1>
+<h1 class="page">Object Oriënted Programming</h1>
 <div class="paragraph">
-<p>Continue on jokeservice, create new joke service, showing DI again
-<a href="https://v2.jokeapi.dev/joke/Any?blacklistFlags=nsfw,racist,sexist&amp;type=single" class="bare">https://v2.jokeapi.dev/joke/Any?blacklistFlags=nsfw,racist,sexist&amp;type=single</a></p>
+<p>In deze les bouwen we verder op de code van het einde van les 2, waar we het State Machine-patroon hebben ingevoerd. Vanuit die basis verdiepen we ons nu in objectgeoriënteerd ontwerp en passen we meerdere OO-principes concreet toe op onze game-architectuur.</p>
 </div>
 <div class="paragraph">
-<p>Kunnen we iets doen met: <a href="https://vedromdest.github.io/pg2/01-http-apis.html" class="bare">https://vedromdest.github.io/pg2/01-http-apis.html</a> ?</p>
+<p>We starten vanuit:
+<a href="https://github.com/tommy-uytterhaegen/HoGent/tree/main/2025_S1_MonoGame_Pikachu_02-EindeLes2" class="bare">https://github.com/tommy-uytterhaegen/HoGent/tree/main/2025_S1_MonoGame_Pikachu_02-EindeLes2</a></p>
+</div>
+<div class="paragraph">
+<p>Tijdens de les herwerken we de structuur van onze game door:</p>
+</div>
+<div class="ulist">
+<ul>
+<li>
+<p>verantwoordelijkheden duidelijker te scheiden (SRP)</p>
+</li>
+<li>
+<p>meer gedrag onder te brengen in domeinobjecten in plaats van in Game1</p>
+</li>
+<li>
+<p>logica op te splitsen in kleinere, gerichte klassen</p>
+</li>
+<li>
+<p>services en managers te introduceren waar dat logisch is</p>
+</li>
+<li>
+<p>afhankelijkheden te verminderen door heldere interfaces en methodestructuur</p>
+</li>
+<li>
+<p>grote methodes en “God classes” te vermijden</p>
+</li>
+<li>
+<p>onze bestaande state-klassen te laten samenwerken met een properder domeinmodel</p>
+</li>
+</ul>
+</div>
+<div class="paragraph">
+<p>We veranderen zo weinig mogelijk aan de gameplay zelf — het doel is niet een uitbreiding van features, maar een zuiverdere, uitbreidbare structuur.</p>
+</div>
+<div class="paragraph">
+<p>Aan het einde van de les komen we uit bij deze code:
+<a href="https://github.com/tommy-uytterhaegen/HoGent/tree/main/2025_S1_MonoGame_Pikachu_03-EindeLes3" class="bare">https://github.com/tommy-uytterhaegen/HoGent/tree/main/2025_S1_MonoGame_Pikachu_03-EindeLes3</a></p>
+</div>
+<div class="paragraph">
+<p>In de eindcode van deze les zijn ook verschillende TODO’s opgenomen. Deze helpen je verder om zelf te oefenen en de aangeleerde concepten écht in de vingers te krijgen.</p>
+</div>
+<div class="paragraph">
+<p>Het is sterk aan te raden om hier zelf mee aan de slag te gaan. Hoe meer je oefent, hoe beter je wordt in het toepassen van OO-principes en het opbouwen van een heldere architectuur.</p>
 </div>
 </article>
   </div>
