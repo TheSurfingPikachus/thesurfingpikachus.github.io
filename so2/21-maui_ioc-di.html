@@ -96,6 +96,9 @@
       <li class="nav-item is-active" data-depth="2">
     <a class="nav-link" href="20-maui_basics.html">Basis</a>
   </li>
+      <li class="nav-item is-active is-current-page" data-depth="2">
+    <a class="nav-link" href="21-maui_ioc-di.html">IoC &amp; DI</a>
+  </li>
 </ul>
   </li>
 </ul>
@@ -123,7 +126,8 @@
 <nav class="breadcrumbs" aria-label="breadcrumbs">
   <ul>
     <li><a href="index.html">Softwareontwerp 2</a></li>
-    <li><a href="21-maui_ioc-di.html">Maui - Inversion of Control &amp; Dependency Injection</a></li>
+    <li>MAUI</li>
+    <li><a href="21-maui_ioc-di.html">IoC &amp; DI</a></li>
   </ul>
 </nav>
 </div>
@@ -144,73 +148,61 @@ In traditionele code beslist de ontwikkelaar zelf wat er gebeurt: welke objecten
 <h3 id="_klassiek_voorbeeld"><a class="anchor" href="#_klassiek_voorbeeld"></a>Klassiek voorbeeld</h3>
 <div class="listingblock">
 <div class="content">
-<pre class="highlightjs highlight"><code class="language-csharp hljs" data-lang="csharp">var service = new ProductService();
-service.SaveProduct("Apple");</code></pre>
+<pre class="highlightjs highlight"><code class="language-csharp hljs" data-lang="csharp">var service = new JokeService();
+service.AddJoke("Er zijn 10 soorten mensen. Degenen die binair begrijpen en degenen die dat niet doen.");</code></pre>
 </div>
 </div>
 <div class="paragraph">
-<p>Met als <code>ProductService</code>:</p>
+<p>Met als <code>JokeService</code>:</p>
 </div>
 <div class="listingblock">
 <div class="content">
-<pre class="highlightjs highlight"><code class="language-csharp hljs" data-lang="csharp">public class ProductService
+<pre class="highlightjs highlight"><code class="language-csharp hljs" data-lang="csharp">public class JokeService
 {
-    private readonly ProductRepository _repository = new ProductRepository();
+    private readonly JokeRepository _jokeRepository = new JokeRepository();
 
-    public void SaveProduct(string name)
+    public void AddJoke(string joke)
     {
-        if (!IsValid(name))
-            return;
+        ArgumentNullException.ThrowIfNullOrEmpty(joke);
 
-        _repository.SaveProduct(name);
-    }
-
-    private bool IsValid(string name)
-    {
-        return !string.IsNullOrWhiteSpace(name);
+        if (!JokeRespository.Exists(joke))
+            _jokeRepository.Add(name);
     }
 }</code></pre>
 </div>
 </div>
 <div class="paragraph">
-<p>Dit ontwerp is op het eerste gezicht goed gestructureerd: verschillende klassen hebben hun eigen verantwoordelijkheid, we hebben een <code>ProductService</code> die de logica bevat om een product op te slaan, en een <code>ProductRepository</code> dat instaat voor de connectie met de database.</p>
+<p>Dit ontwerp is op het eerste gezicht goed gestructureerd: verschillende klassen hebben hun eigen verantwoordelijkheid, we hebben een <code>JokeService</code> die de logica bevat om een nieuwe grap op te slaan, en een <code>JokeRepository</code> dat instaat voor de persistentie.</p>
 </div>
 </div>
 <div class="sect2">
 <h3 id="_het_probleem"><a class="anchor" href="#_het_probleem"></a>Het probleem</h3>
 <div class="paragraph">
-<p>De <code>ProductService</code> beslist zelf <strong>welke</strong> repository ze gebruikt en <strong>wanneer</strong> die wordt aangemaakt.
-Dat betekent dat <code>ProductService</code> een sterke afhankelijkheid heeft van een specifieke implementatie (<code>ProductRepository</code>).
-Dit beperkt onze flexibiliteit.</p>
+<p>De <code>JokeService</code> beslist zelf <strong>welke</strong> repository ze gebruikt en <strong>wanneer</strong> die wordt aangemaakt. Dat betekent dat <code>JokeService</code> een sterke afhankelijkheid heeft van een specifieke implementatie (<code>JokeRepository</code>). Dit beperkt onze flexibiliteit.</p>
 </div>
 </div>
 <div class="sect2">
 <h3 id="_een_oplossing"><a class="anchor" href="#_een_oplossing"></a>Een oplossing</h3>
 <div class="paragraph">
-<p>Zou het niet handiger zijn als de <code>ProductService</code> eenvoudigweg een repository <strong>ontvangt</strong> in plaats van er zelf een te maken?</p>
+<p>Zou het niet handiger zijn als de <code>JokeService</code> eenvoudigweg een repository <strong>ontvangt</strong> in plaats van er zelf een te maken?</p>
 </div>
 <div class="listingblock">
 <div class="content">
-<pre class="highlightjs highlight"><code class="language-csharp hljs" data-lang="csharp">public class ProductService
+<pre class="highlightjs highlight"><code class="language-csharp hljs" data-lang="csharp">public class JokeService
 {
-    private readonly IProductRepository _repository;
+    private readonly IJokeRepository _jokeRepository = new JokeRepository();
 
-    public ProductService(IProductRepository repository)
+    public JokeService(IJokeRepository jokeRepository)
     {
-        _repository = repository;
+        _jokeRepository = jokeRepository;
     }
 
-    public void SaveProduct(string name)
+    public void AddJoke(string joke)
     {
-        if (!IsValid(name))
-            return;
+        ArgumentNullException.ThrowIfNullOrEmpty(joke);
 
-        _repository.SaveProduct(name);
-    }
-
-    private bool IsValid(string name)
-    {
-        return !string.IsNullOrWhiteSpace(name);
+        if (!JokeRespository.Exists(joke))
+            _jokeRepository.Add(name);
     }
 }</code></pre>
 </div>
@@ -219,19 +211,19 @@ Dit beperkt onze flexibiliteit.</p>
 <div class="sect2">
 <h3 id="_voordelen"><a class="anchor" href="#_voordelen"></a>Voordelen</h3>
 <div class="paragraph">
-<p>Op deze manier is het aan de <strong>aanroeper</strong> van <code>ProductService</code> om een geldige implementatie van <code>IProductRepository</code> te voorzien.
+<p>Op deze manier is het aan de <strong>aanroeper</strong> van <code>JokeService</code> om een geldige implementatie van <code>IJokeRepository</code> te voorzien.
 Dat heeft verschillende voordelen:</p>
 </div>
 <div class="ulist">
 <ul>
 <li>
-<p>We kunnen tijdens <strong>unit tests</strong> eenvoudig een <strong>mock</strong> of <strong>fake</strong> implementatie van <code>IProductRepository</code> gebruiken.</p>
+<p>We kunnen tijdens <strong>unit tests</strong> eenvoudig een <strong>mock</strong> of <strong>fake</strong> implementatie van <code>IJokeRepository</code> gebruiken.</p>
 </li>
 <li>
-<p>Verschillende klassen kunnen <strong>dezelfde</strong> instantie van <code>IProductRepository</code> delen, wat bijvoorbeeld caching ten goede komt.</p>
+<p>Verschillende klassen kunnen <strong>dezelfde</strong> instantie van <code>IJokeRepository</code> delen, wat bijvoorbeeld caching ten goede komt.</p>
 </li>
 <li>
-<p>De code is <strong>losser gekoppeld</strong>: <code>ProductService</code> kent enkel de interface, niet de concrete implementatie.</p>
+<p>De code is <strong>losser gekoppeld</strong>: <code>JokeService</code> kent enkel de interface, niet de concrete implementatie.</p>
 </li>
 </ul>
 </div>
@@ -254,8 +246,8 @@ De omgeving die deze objecten aanmaakt en bij elkaar brengt noemen we een contai
 </div>
 <div class="listingblock">
 <div class="content">
-<pre class="highlightjs highlight"><code class="language-csharp hljs" data-lang="csharp">var repo = new ProductRepository();
-var service = new ProductService(repo);</code></pre>
+<pre class="highlightjs highlight"><code class="language-csharp hljs" data-lang="csharp">var repo = new JokeRepository();
+var service = new JokeService(repo);</code></pre>
 </div>
 </div>
 <div class="paragraph">
@@ -354,16 +346,131 @@ niet de pagina beslist welke JokeService gebruikt wordt, maar MAUI bepaalt wat e
 <div class="paragraph">
 <p>In de oefening van vorige week maakten we een aparte klasse die verantwoordelijk is voor de grappen. Refactor nu de oefening van vorige week zodat deze aparte klasse via DI gebruikt wordt.</p>
 </div>
+<div class="paragraph">
+<p>We gaan  onze JokeService zelf ook gebruik laten maken van een andere component:  een repository. Deze zal dan persistentie doen of - zoals in ons geval - de lijst bijhouden in het geheugen. Op die manier wordt het ontwerp nog flexibeler en blijft elke verantwoordelijkheid netjes gescheiden.</p>
+</div>
+<div class="paragraph">
+<p>We kunnen nu ook een DadJokeRepository toevoegen die dezelfde interface implementeert. Door deze repository te registreren in onze DI-container in plaats van de bestaande JokeRepository, schakelt de applicatie probleemloos over naar een andere bron van grappen, zonder dat we elders code moeten aanpassen.</p>
+</div>
 </div>
 </div>
 <div class="sect1">
-<h2 id="_take_it_further"><a class="anchor" href="#_take_it_further"></a>Take it further</h2>
+<h2 id="_repository_en_data_opslag_met_litedb"><a class="anchor" href="#_repository_en_data_opslag_met_litedb"></a>Repository en data-opslag met LiteDB</h2>
 <div class="sectionbody">
 <div class="paragraph">
-<p>We kunnen nu ook een DadJokeService toevoegen die dezelfde interface implementeert. Door deze service te registreren in onze DI-container in plaats van de bestaande JokeService, schakelt de applicatie probleemloos over naar een andere bron van grappen, zonder dat we elders code moeten aanpassen.</p>
+<p>Tot nu toe hebben we DI gebruikt om services zoals JokeService in te pluggen.
+We kunnen hetzelfde principe toepassen voor data-opslag, via een Repository en een database zoals LiteDB.</p>
 </div>
 <div class="paragraph">
-<p>We kunnen nog een stap verder gaan door onze JokeService zelf afhankelijk te maken van een andere component, bijvoorbeeld een repository. Op die manier wordt het ontwerp nog flexibeler en blijft elke verantwoordelijkheid netjes gescheiden.</p>
+<p><a href="https://www.litedb.org/">LiteDB</a> is een eenvoudige <a href="https://en.wikipedia.org/wiki/NoSQL">NoSQL-database</a> in één enkel bestand.
+Je kan er rechtstreeks C#-objecten in bewaren zonder tabellen of SQL te definiëren.</p>
+</div>
+<div class="sect2">
+<h3 id="_litedb_implementatie_van_de_repository"><a class="anchor" href="#_litedb_implementatie_van_de_repository"></a>LiteDB-implementatie van de repository</h3>
+<div class="paragraph">
+<p>We gaan nu een implementatie maken die LiteDB gebruikt.
+Je voegt ondersteuning toe voor LiteDB via NuGet in je MAUI-project.</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="highlightjs highlight"><code class="language-csharp hljs" data-lang="csharp">using HoGentMauiBL.Interfaces;
+using LiteDB;
+
+namespace MauiJokesDL
+{
+    public class LiteDBJokeRepository : IJokeRespository, IDisposable
+    {
+        private const string DATABASE_LOCATION = "joke_db.db";
+
+        // Een 'record' een zeer eenvoudige manier om een data klasse te maken
+        public record Joke(string Text);
+
+        // De database connectie, dewelke we pas willen creëeren als we die gebruiken. Vandaar de 'Lazy' klasse.
+        private static Lazy&lt;LiteDatabase&gt; _database = new Lazy&lt;LiteDatabase&gt;(new LiteDatabase(DATABASE_LOCATION));
+
+        // We moeten altijd via een 'Collection' gaan, je kan dit vergelijken met een Table in gewone SQL databases
+        private ILiteCollection&lt;Joke&gt; JokeCollection
+            =&gt; _database.Value.GetCollection&lt;Joke&gt;();
+
+        public void Add(string joke)
+            =&gt; JokeCollection.Insert(new Joke(joke));
+
+
+        public bool Exists(string joke)
+            =&gt; JokeCollection.Exists(x =&gt; x.Text == joke);
+
+        public string Get(int jokeIndex)
+        {
+            // We willen een 'joke' vinden op index, hiervoor moeten we de tabel sorteren en dan de waarde pakken bij de index
+            return JokeCollection.Query()               // Start een query
+                                 .OrderBy(x =&gt; x.Text)  // Kies een sortering
+                                 .Offset(jokeIndex)     // Sla 'jokeIndex' aantal over
+                                 .Limit(1)              // Neem 1 record
+                                 .FirstOrDefault()?     // Uit de resulteren lijst, pak de eerst (er zal maar 1 zijn door de Limit)
+                                 .Text                  // Neem hiervan de Text property
+                                 ?? "";                 // Als we 'null' krijgen, geen een lege string terug
+        }
+
+        public int GetCount()
+            =&gt; JokeCollection.Count();
+
+        public void Dispose()
+        {
+            // We moeten de database connectie sluiten als ons object vernietigd wordt.
+            if (_database.IsValueCreated)
+                _database.Value.Dispose();
+        }
+    }
+}</code></pre>
+</div>
+</div>
+</div>
+<div class="sect2">
+<h3 id="_registratie_in_mauiprogram"><a class="anchor" href="#_registratie_in_mauiprogram"></a>Registratie in MauiProgram</h3>
+<div class="paragraph">
+<p>We koppelen alles opnieuw via de DI-container in MauiProgram.cs.</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="highlightjs highlight"><code class="language-csharp hljs" data-lang="csharp">public static class MauiProgram
+{
+    public static MauiApp CreateMauiApp()
+    {
+        var builder = MauiApp.CreateBuilder();
+
+        ...
+
+        // We registreren via 'Singleton' omdat we willen vermijden dat we een nieuwe connectie krijgen per keer we de JokeRepository opvragen
+        builder.Services.AddSingleton&lt;IJokeRespository, LiteDBJokeRepository&gt;();
+        //builder.Services.AddTransient&lt;IJokeRespository, JokeRepository&gt;();
+
+        // JokeService gebruikt de repository via de interface
+        builder.Services.AddTransient&lt;JokeService&gt;();
+
+        ...
+
+        return builder.Build();
+    }
+}</code></pre>
+</div>
+</div>
+<div class="paragraph">
+<p>Note: LiteDbJokeRepository willen we als Singleton, want anders gaan we verschillende connecties openen naar onze LiteDb.
+* kan JokeService via DI met de repository werken,
+* en heeft de UI geen idee meer dat LiteDB bestaat.</p>
+</div>
+</div>
+<div class="sect2">
+<h3 id="_gebruik_in_de_maui_pagina"><a class="anchor" href="#_gebruik_in_de_maui_pagina"></a>Gebruik in de MAUI-pagina</h3>
+<div class="paragraph">
+<p>Voor de pagina verandert er niets: we injecteren nog altijd JokeService, maar die werkt nu met een echte database.</p>
+</div>
+</div>
+<div class="sect2">
+<h3 id="_oefening_2"><a class="anchor" href="#_oefening_2"></a>Oefening</h3>
+<div class="paragraph">
+<p>Als de gebruiker de willekeurig getoonde grap niet leuk vind dan moet hij deze kunnen verwijderen. Hiervoor voeg je een knop toe aan het bovenste deel van het scherm. Wanneer hierop geklikt wordt dan zal hij, via de JokeService, de grap verwijderen. Dit moet zowel werken voor de JokeRepository, als voor de LiteDBJokeRepository. Aan de bestaande interface methoden wijzigt er niks, je voegt gewoon 1 extra toe.</p>
+</div>
 </div>
 </div>
 </div>
