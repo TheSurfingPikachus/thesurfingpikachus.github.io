@@ -3,7 +3,7 @@
   <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width,initial-scale=1">
-    <title>Maui - MVVM (Model-View-ViewModel) :: Softwareontwerp 2 (BETA)</title>
+    <title>Maui – MVVM &amp; CollectionView :: Softwareontwerp 2 (BETA)</title>
     <meta name="generator" content="Antora 3.1.14">
     <link rel="stylesheet" href="../_/css/site.css">
   </head>
@@ -126,7 +126,7 @@
 <nav class="breadcrumbs" aria-label="breadcrumbs">
   <ul>
     <li><a href="index.html">Softwareontwerp 2</a></li>
-    <li><a href="22-maui_mvvm.html">Maui - MVVM (Model-View-ViewModel)</a></li>
+    <li><a href="22-maui_mvvm.html">Maui – MVVM &amp; CollectionView</a></li>
   </ul>
 </nav>
 </div>
@@ -135,8 +135,620 @@
   <div class="toc-menu"></div>
 </aside>
 <article class="doc">
-<h1 class="page">Maui - MVVM (Model-View-ViewModel)</h1>
+<h1 class="page">Maui – MVVM &amp; CollectionView</h1>
+<div id="preamble">
+<div class="sectionbody">
+<div class="paragraph">
+<p>In de vorige les hebben we Inversion of Control, Dependency Injection en onze JokeService uitgewerkt.
+Vanaf deze les schakelen we over naar MVVM, de standaardarchitectuur voor MAUI-apps.</p>
+</div>
+<div class="paragraph">
+<p>We gebruiken dezelfde oefening (de Joke-app) om MVVM stap voor stap te introduceren.
+Zo groeit de app les na les mee, zonder dat we telkens helemaal opnieuw beginnen.</p>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="_mvvm"><a class="anchor" href="#_mvvm"></a>MVVM</h2>
+<div class="sectionbody">
+<div class="paragraph">
+<p>MVVM is een architecturaal patroon dat staat voor Model – View – ViewModel.
+Het wordt veel gebruikt in frameworks zoals MAUI, WPF, Xamarin, Avalonia, enz.
+Het doel is om UI en logica strikt te scheiden, zodat applicaties overzichtelijker, testbaar en uitbreidbaar worden.</p>
+</div>
+<div class="dlist">
+<dl>
+<dt class="hdlist1">Model</dt>
+<dd>
+<p>Data en domeinlogica, de BL. Het model kent de UI niet.</p>
+</dd>
+<dt class="hdlist1">View</dt>
+<dd>
+<p>De UI, dus de XAML-pagina&#8217;s en hun views. Deze toont de gegevens van het ViewModel.
+Bevat geen logica behalve UI-logica (animaties, opmaak, simpele event-afhandeling die puur visueel is).</p>
+</dd>
+<dt class="hdlist1">ViewModel</dt>
+<dd>
+<p>De brug tussen Model en View. Het ViewModel haalt of bewaart data via services of repositories. Deze stelt properties en commands beschikbaar voor de View via binding. Het ViewModel kent de view niet rechtstreeks, enkel via binding.</p>
+</dd>
+</dl>
+</div>
+<div class="paragraph">
+<p>Belangrijke principes:</p>
+</div>
+<div class="ulist">
+<ul>
+<li>
+<p>De View kent het ViewModel via <code>BindingContext</code>.</p>
+</li>
+<li>
+<p>Het ViewModel kent de View niet.</p>
+</li>
+<li>
+<p>Modellen kennen noch View, noch ViewModel.</p>
+</li>
+</ul>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="_concreet_onze_joke_app_in_mvvm"><a class="anchor" href="#_concreet_onze_joke_app_in_mvvm"></a>Concreet: onze Joke-app in MVVM</h2>
+<div class="sectionbody">
+<div class="paragraph">
+<p>De data van het model wordt gebruikt om de ViewModels op te bouwen. Deze ViewModels stellen dan via hun eigen eigenschappen de data ter beschikking van de UI.</p>
+</div>
+<div class="paragraph">
+<p>Deze ViewModels zijn dus ook wel terug models, maar voor de view: vandaar de naam viewMODEL. De eigenschappen van de ViewModels kunnen gelijklopen met de eigenschappen van het model, maar dit hoeft niet.
+Hiermee bedoelen we dat als je model een eigenschap <code>Naam</code> heeft, dan zal je ViewModel dit waarschijnlijk ook hebben. Het kan zijn dat je model een eigenschap <code>Geboortedatum</code> heeft en in je ViewModel kan dit bv. eerder de berekende waarde <code>Leeftijd</code> zijn.</p>
+</div>
+<div class="paragraph">
+<p>De UI zal zich <em>binden</em> aan een ViewModel. Binnen Maui kan je dit doen via <code>Binding</code>.</p>
+</div>
+<div class="paragraph">
+<p>We vertrekken van de Joke-app uit de vorige les, waar de logica grotendeels in code-behind stond.</p>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="_data_binding"><a class="anchor" href="#_data_binding"></a>Data binding</h2>
+<div class="sectionbody">
+<div class="paragraph">
+<p>Data binding is het mechanisme waarmee de UI (XAML) automatisch verbonden wordt met properties in het ViewModel.</p>
+</div>
+<div class="paragraph">
+<p>De View leest dus niet meer rechtstreeks uit C#-code-behind, maar uit het ViewModel.</p>
+</div>
+<div class="paragraph">
+<p>Dit zorgt ervoor dat de UI automatisch verandert wanneer het ViewModel verandert en dat het ViewModel verandert wanneer de gebruiker in de UI iets aanpast.</p>
+</div>
+<div class="paragraph">
+<p>Stel dat je een ViewModel <code>JokeViewModel</code> hebt, dan stel je in de view de BindingContext in:</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="highlightjs highlight"><code class="language-csharp hljs" data-lang="csharp">public partial class JokePage : ContentPage
+{
+    public JokeListPage(JokeViewModel vm)
+    {
+        InitializeComponent();
 
+        BindingContext = vm;
+    }
+}</code></pre>
+</div>
+</div>
+<div class="paragraph">
+<p>En in XAML bind je:</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="highlightjs highlight"><code class="language-xml hljs" data-lang="xml">&lt;ContentPage xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
+             x:Class="JokeApp.Views.JokeListPage"&gt;
+    &lt;VerticalStackLayout Padding="20"&gt;
+        &lt;Label Text="{Binding CurrentJoke}" /&gt;
+    &lt;/VerticalStackLayout&gt;
+&lt;/ContentPage&gt;</code></pre>
+</div>
+</div>
+<div class="paragraph">
+<p>Hier wordt <code>Text</code> automatisch geüpdatet wanneer <code>CurrentJoke</code> wijzigt, op voorwaarde dat het ViewModel <code>INotifyPropertyChanged</code> correct implementeert. Op <code>INotifyPropertyChanged</code> komen we later nog terug.</p>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="_command_binding"><a class="anchor" href="#_command_binding"></a>Command binding</h2>
+<div class="sectionbody">
+<div class="paragraph">
+<p>In plaats van click-events in code-behind gebruiken we commands in het ViewModel via de interface <code>ICommand</code>.</p>
+</div>
+<div class="paragraph">
+<p>De ViewModel wordt iets zoals:</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="highlightjs highlight"><code class="language-csharp hljs" data-lang="csharp">public class JokeListViewModel : BaseViewModel
+{
+    private readonly IJokeService _jokeService;
+
+    public ICommand NewJokeCommand { get; }
+
+    public JokeListViewModel(IJokeService jokeService)
+    {
+        _jokeService = jokeService;
+
+        NewJokeCommand = new Command(() =&gt; OnNewJoke());
+    }
+
+    private void OnNewJoke()
+    {
+        ...
+    }
+}</code></pre>
+</div>
+</div>
+<div class="paragraph">
+<p>En in de XAML gebruiken we dan de <code>Command</code> eigenschap op bv. een button:</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="highlightjs highlight"><code class="language-xml hljs" data-lang="xml">&lt;Button Text="Nieuwe grap"
+        Command="{Binding NewJokeCommand}" /&gt;</code></pre>
+</div>
+</div>
+<div class="paragraph">
+<p>De knop roept nu de command aan in het ViewModel, zonder dat we een event handler in de code-behind nodig hebben.</p>
+</div>
+<div class="paragraph">
+<p>Voordelen:</p>
+</div>
+<div class="ulist">
+<ul>
+<li>
+<p>Minder code-behind</p>
+</li>
+<li>
+<p>Makkelijker te testen</p>
+</li>
+<li>
+<p>Duidelijke scheiding tussen UI en logica</p>
+</li>
+</ul>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="_inotifypropertychanged"><a class="anchor" href="#_inotifypropertychanged"></a>INotifyPropertyChanged</h2>
+<div class="sectionbody">
+<div class="paragraph">
+<p>INotifyPropertyChanged is een interface die aangeeft dat een object kan laten weten wanneer één van zijn properties verandert.</p>
+</div>
+<div class="paragraph">
+<p>Het is een kernonderdeel van MVVM: zonder INotifyPropertyChanged werkt databinding in MAUI niet correct, want databinding betekent dat de UI (bijv. een Label of Entry) automatisch geüpdatet wordt wanneer de onderliggende property in het ViewModel wijzigt.
+MAUI moet dus weten wanneer een property veranderd is.</p>
+</div>
+<div class="paragraph">
+<p>Dat 'ik ben gewijzigd' signaal wordt gegeven door INotifyPropertyChanged.</p>
+</div>
+<div class="paragraph">
+<p>INotifyPropertyChanged bevat maar één eigenschap:</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="highlightjs highlight"><code class="language-csharp hljs" data-lang="csharp">public event PropertyChangedEventHandler PropertyChanged;</code></pre>
+</div>
+</div>
+<div class="paragraph">
+<p>Als een property verandert, moet je zelf het bijhorende event activeren.
+Dit gebeurt door alle subscribers van het event aan te roepen:</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="highlightjs highlight"><code class="language-csharp hljs" data-lang="csharp">PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(nameof(CurrentJoke)));</code></pre>
+</div>
+</div>
+<div class="paragraph">
+<p>De UI <em>luistert</em> naar deze events en weet dan:</p>
+</div>
+<div class="paragraph">
+<p>"Ah, de property CurrentJoke is veranderd, ik moet de UI updaten."</p>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="_collectionview"><a class="anchor" href="#_collectionview"></a>CollectionView</h2>
+<div class="sectionbody">
+<div class="paragraph">
+<p>CollectionView is de control in MAUI om lijsten efficiënt te tonen.</p>
+</div>
+<div class="paragraph">
+<p>Belangrijkste eigenschappen:</p>
+</div>
+<div class="ulist">
+<ul>
+<li>
+<p><code>ItemsSource</code>: de ViewModel collectie</p>
+</li>
+<li>
+<p><code>ItemTemplate</code>: de template die gebruikt wordt om de view op te bouwen voor de items van de collectie</p>
+</li>
+<li>
+<p><code>SelectionMode</code>: wat voor selectie is mogelijk</p>
+</li>
+<li>
+<p><code>SelectedItem</code>: het geselecteerde item</p>
+</li>
+</ul>
+</div>
+<div class="paragraph">
+<p>Voorbeeld XAML:</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="highlightjs highlight"><code class="language-xml hljs" data-lang="xml">&lt;CollectionView ItemsSource="{Binding Jokes}"
+                SelectionMode="Single"
+                SelectedItem="{Binding SelectedJoke}"&gt;
+    &lt;CollectionView.ItemTemplate&gt;
+        &lt;DataTemplate&gt;
+            &lt;Border Padding="10" Margin="4"&gt;
+                &lt;Label Text="{Binding Text}" /&gt;
+            &lt;/Border&gt;
+        &lt;/DataTemplate&gt;
+    &lt;/CollectionView.ItemTemplate&gt;
+&lt;/CollectionView&gt;</code></pre>
+</div>
+</div>
+<div class="admonitionblock important">
+<table>
+<tr>
+<td class="icon">
+<i class="fa icon-important" title="Important"></i>
+</td>
+<td class="content">
+Voor de DataTemplate wordt het item (één <code>Joke</code>) als BindingContext gezet. De <code>Label</code> binnen de DataTemplate heeft dus <em>niet</em> de ViewModel als BindingContext, maar 1 enkele JokeModel.
+</td>
+</tr>
+</table>
+</div>
+<div class="paragraph">
+<p>Model:</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="highlightjs highlight"><code class="language-csharp hljs" data-lang="csharp">public class Joke
+{
+    public string Text { get; set; } = string.Empty;
+}</code></pre>
+</div>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="_observablecollectiont"><a class="anchor" href="#_observablecollectiont"></a>ObservableCollection&lt;T&gt;</h2>
+<div class="sectionbody">
+<div class="paragraph">
+<p>Wanneer de lijst in het ViewModel kan veranderen (items toevoegen, verwijderen, enz.), gebruik je ObservableCollection.</p>
+</div>
+<div class="paragraph">
+<p>ViewModel:</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="highlightjs highlight"><code class="language-csharp hljs" data-lang="csharp">public class JokeListViewModel : INotifyPropertyChanged
+{
+    public event PropertyChangedEventHandler PropertyChanged;
+
+    public ObservableCollection&lt;Joke&gt; Jokes { get; } = new ObservableCollection&lt;Joke&gt;();
+
+    public ICommand AddJokeCommand { get; }
+
+    private string _newJokeText;
+    public string NewJokeText
+    {
+        get =&gt; _newJokeText;
+        set
+        {
+            _newJokeText = value;
+
+            PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(nameof(NewJokeText)));
+        }
+    }
+
+    public JokeListViewModel()
+    {
+        AddJokeCommand = new Command(() =&gt; OnAddJoke());
+    }
+
+    private void OnAddJoke()
+    {
+        if (!string.IsNullOrWhiteSpace(NewJokeText))
+        {
+            Jokes.Add(new Joke { Text = NewJokeText });
+            NewJokeText = string.Empty;
+        }
+    }
+}</code></pre>
+</div>
+</div>
+<div class="paragraph">
+<p>XAML:</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="highlightjs highlight"><code class="language-xml hljs" data-lang="xml">&lt;Entry Text="{Binding NewJokeText}"
+       Placeholder="Typ een grap..." /&gt;
+
+&lt;Button Text="Toevoegen"
+        Command="{Binding AddJokeCommand}" /&gt;</code></pre>
+</div>
+</div>
+<div class="paragraph">
+<p>Omdat we ObservableCollection gebruiken, wordt de CollectionView automatisch geüpdatet zonder extra code.</p>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="_navigatie_in_een_mvvm_app"><a class="anchor" href="#_navigatie_in_een_mvvm_app"></a>Navigatie in een MVVM-app</h2>
+<div class="sectionbody">
+<div class="paragraph">
+<p>Navigatie is ook logica, dus die willen we liefst niet in de code-behind van de View stoppen.
+In MAUI met Shell navigeren we meestal met <code>Shell.Current.GoToAsync</code>.</p>
+</div>
+<div class="paragraph">
+<p>Zonder MVVM zouden we bijvoorbeeld in code-behind doen:</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="highlightjs highlight"><code class="language-csharp hljs" data-lang="csharp">await Shell.Current.GoToAsync(nameof(JokeDetailPage));</code></pre>
+</div>
+</div>
+<div class="paragraph">
+<p>In een MVVM-opzet willen we navigatie vanuit een ViewModel kunnen aansturen, zonder een rechtstreekse afhankelijkheid op <code>Shell.Current</code>.</p>
+</div>
+<div class="paragraph">
+<p>Daarom creëren we een NavigationService waar we Shell-navigatie in plaatsen.</p>
+</div>
+<div class="sect2">
+<h3 id="_shell_routes_definiëren"><a class="anchor" href="#_shell_routes_definiëren"></a>Shell-routes definiëren</h3>
+<div class="paragraph">
+<p>Om Shell-navigatie te kunnen gebruiken moet de Shell weet hebben van de pagina&#8217;s waarnaar men kan gaan. Dit laat je weten via de routes.</p>
+</div>
+<div class="paragraph">
+<p>Stel dat we een pagina hebben genaamd <code>JokeDetailPage</code>, dan zou de registratie hiervan als volgt zijn:</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="highlightjs highlight"><code class="language-csharp hljs" data-lang="csharp">Routing.RegisterRoute(nameof(JokeDetailPage), typeof(JokeDetailPage));</code></pre>
+</div>
+</div>
+<div class="paragraph">
+<p>Deze registratie gebeurt binnen de MauiProgram.cs, in de methode <code>CreateMauiApp</code></p>
+</div>
+</div>
+<div class="sect2">
+<h3 id="_navigationservice"><a class="anchor" href="#_navigationservice"></a>NavigationService</h3>
+<div class="paragraph">
+<p>Zoals gezegd willen we geen harde afhankelijkheid van Shell in onze ViewModellen, dus we gaan de navigatie encapsuleren in een NavigationService. Hiervoor definiëren we eerst een interface:</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="highlightjs highlight"><code class="language-csharp hljs" data-lang="csharp">public interface INavigationService
+{
+    Task GoToAsync(string route, IDictionary&lt;string, object&gt;? parameters = null);
+
+    Task GoBackAsync();
+}</code></pre>
+</div>
+</div>
+<div class="paragraph">
+<p>Implementatie op basis van Shell:</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="highlightjs highlight"><code class="language-csharp hljs" data-lang="csharp">public class ShellNavigationService : INavigationService
+{
+    public Task GoToAsync(string route, IDictionary&lt;string, object&gt;? parameters = null)
+    {
+        if (parameters is null)
+            return Shell.Current.GoToAsync(route);
+
+        return Shell.Current.GoToAsync(route, parameters);
+    }
+
+    public Task GoBackAsync()
+    {
+        Shell.Current.Navigation.PopAsync();
+    }
+}</code></pre>
+</div>
+</div>
+<div class="paragraph">
+<p>Registratie in <code>MauiProgram.cs</code>:</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="highlightjs highlight"><code class="language-csharp hljs" data-lang="csharp">...
+builder.Services.AddTransient&lt;INavigationService, ShellNavigationService&gt;();
+...</code></pre>
+</div>
+</div>
+</div>
+<div class="sect2">
+<h3 id="_navigeren_vanuit_een_viewmodel"><a class="anchor" href="#_navigeren_vanuit_een_viewmodel"></a>Navigeren vanuit een ViewModel</h3>
+<div class="paragraph">
+<p>Nu kan een ViewModel navigatie vragen via de service (de INotifyPropertyChanged is even weggelaten om te focussen op de navigatie):</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="highlightjs highlight"><code class="language-csharp hljs" data-lang="csharp">public class JokeListViewModel
+{
+    private readonly INavigationService _navigationService;
+
+    public ObservableCollection&lt;Joke&gt; Jokes { get; } = new ObservableCollection&lt;Joke&gt;();
+
+    private Joke? _selectedJoke;
+    public Joke? SelectedJoke
+    {
+        get =&gt; _selectedJoke;
+        set
+        {
+            _selectedJoke = value;
+
+            OnJokeSelected(value);
+        }
+    }
+
+    public JokeListViewModel(
+        IJokeService jokeService,
+        INavigationService navigationService)
+    {
+        _jokeService = jokeService;
+        _navigationService = navigationService;
+    }
+
+    private async void OnJokeSelected(Joke joke)
+    {
+        var parameters = new Dictionary&lt;string, object&gt;
+        {
+            ["joke"] = joke
+        };
+
+        await _navigationService.GoToAsync(nameof(JokeDetailPage), parameters);
+    }
+}</code></pre>
+</div>
+</div>
+<div class="paragraph">
+<p>De CollectionView in XAML bindt <code>SelectedItem</code> op dit ViewModel:</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="highlightjs highlight"><code class="language-xml hljs" data-lang="xml">&lt;CollectionView ItemsSource="{Binding Jokes}"
+                SelectionMode="Single"
+                SelectedItem="{Binding SelectedJoke}"&gt;
+    &lt;CollectionView.ItemTemplate&gt;
+        &lt;DataTemplate&gt;
+            &lt;Border Padding="10" Margin="4"&gt;
+                &lt;Label Text="{Binding Text}" /&gt;
+            &lt;/Border&gt;
+        &lt;/DataTemplate&gt;
+    &lt;/CollectionView.ItemTemplate&gt;
+&lt;/CollectionView&gt;</code></pre>
+</div>
+</div>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="_data_doorgeven_met_iqueryattributable"><a class="anchor" href="#_data_doorgeven_met_iqueryattributable"></a>Data doorgeven met IQueryAttributable</h2>
+<div class="sectionbody">
+<div class="paragraph">
+<p>Shell kan parameters doorgeven aan de doelpagina. Die parameters komen terecht in een dictionary waar de pagina of het ViewModel kan uit lezen.</p>
+</div>
+<div class="paragraph">
+<p>Een manier om deze parameters binnen te pakken is door de <code>IQueryAttributable</code>-interface te implementeren op het ViewModel.</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="highlightjs highlight"><code class="language-csharp hljs" data-lang="csharp">public interface IQueryAttributable
+{
+    void ApplyQueryAttributes(IDictionary&lt;string, object&gt; query);
+}</code></pre>
+</div>
+</div>
+<div class="paragraph">
+<p>Wanneer we navigeren met:</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="highlightjs highlight"><code class="language-csharp hljs" data-lang="csharp">var parameters = new Dictionary&lt;string, object&gt;
+{
+    ["joke"] = selectedJoke
+};
+
+await _navigationService.GoToAsync(nameof(JokeDetailPage), parameters);</code></pre>
+</div>
+</div>
+<div class="paragraph">
+<p>dan kunnen we deze parameter opvangen in het ViewModel van JokeDetailPage:</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="highlightjs highlight"><code class="language-csharp hljs" data-lang="csharp">public class JokeDetailViewModel: IQueryAttributable
+{
+    private Joke? _joke;
+    public Joke? Joke
+    {
+        ...
+    }
+
+    public void ApplyQueryAttributes(IDictionary&lt;string, object&gt; query)
+    {
+        if (query.TryGetValue("joke", out var jokeObj) &amp;&amp; jokeObj is Joke joke)
+        {
+            Joke = joke;
+        }
+    }
+}</code></pre>
+</div>
+</div>
+<div class="paragraph">
+<p>In de View stellen we dit ViewModel in als BindingContext, net zoals we al gezien hebben:</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="highlightjs highlight"><code class="language-csharp hljs" data-lang="csharp">public partial class JokeDetailPage : ContentPage
+{
+    public JokeDetailPage(JokeDetailViewModel vm)
+    {
+        InitializeComponent();
+
+        BindingContext = vm;
+    }
+}</code></pre>
+</div>
+</div>
+<div class="paragraph">
+<p>En in de XAML kunnen we de details tonen:</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="highlightjs highlight"><code class="language-xml hljs" data-lang="xml">&lt;ContentPage xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
+             x:Class="JokeApp.Views.JokeDetailPage"&gt;
+    &lt;VerticalStackLayout Padding="20" Spacing="10"&gt;
+        &lt;Label Text="Details van de grap" FontSize="24" /&gt;
+        &lt;Label Text="{Binding Joke.Text}" FontSize="18" /&gt;
+    &lt;/VerticalStackLayout&gt;
+&lt;/ContentPage&gt;</code></pre>
+</div>
+</div>
+<div class="admonitionblock important">
+<table>
+<tr>
+<td class="icon">
+<i class="fa icon-important" title="Important"></i>
+</td>
+<td class="content">
+De key die je gebruikt in de parameters (<code>"joke"</code>) moet overeenkomen met de key die je gebruikt in <code>ApplyQueryAttributes</code>.
+</td>
+</tr>
+</table>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="_oefening"><a class="anchor" href="#_oefening"></a>Oefening</h2>
+<div class="sectionbody">
+<div class="paragraph">
+<p>Vertrek van de Joke-app uit de vorige les en breng deze over naar MVVM. Je kan deze ook vinden op GitHub.</p>
+</div>
+<div class="paragraph">
+<p>Breid daarna de app uit met een extra knop die een nieuw scherm opent. Op dat scherm komt een CollectionView met alle grappen die momenteel in het systeem zitten. Onderaan staat een Label dat de volledig geselecteerde grap toont. Om te vermijden dat bepaalde grappen te veel ruimte innemen, mag elk item in de lijst maximaal twee lijnen tonen (<code>MaxLines</code>). Alleen het Label onderaan toont de volledige tekst.</p>
+</div>
+<div class="paragraph">
+<p>Wanneer in het oorspronkelijke scherm op de knop wordt gedrukt om het lijstscherm te openen, wordt de huidige willekeurige grap als parameter doorgegeven. In het scherm met de CollectionView moet deze grap meteen geselecteerd worden. Als er nog geen grap getoond werd, worden er geen parameters doorgegeven.</p>
+</div>
+</div>
+</div>
 </article>
   </div>
 </main>
