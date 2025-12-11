@@ -99,6 +99,9 @@
       <li class="nav-item is-active" data-depth="2">
     <a class="nav-link" href="21-maui_ioc-di.html">IoC &amp; DI</a>
   </li>
+      <li class="nav-item is-active is-current-page" data-depth="2">
+    <a class="nav-link" href="22-maui_mvvm.html">MVVM &amp; Navigatie</a>
+  </li>
 </ul>
   </li>
 </ul>
@@ -126,7 +129,8 @@
 <nav class="breadcrumbs" aria-label="breadcrumbs">
   <ul>
     <li><a href="index.html">Softwareontwerp 2</a></li>
-    <li><a href="22-maui_mvvm.html">Maui – MVVM &amp; CollectionView</a></li>
+    <li>MAUI</li>
+    <li><a href="22-maui_mvvm.html">MVVM &amp; Navigatie</a></li>
   </ul>
 </nav>
 </div>
@@ -435,37 +439,20 @@ Voor de DataTemplate wordt het item (één <code>Joke</code>) als BindingContext
 <div class="content">
 <pre class="highlightjs highlight"><code class="language-csharp hljs" data-lang="csharp">public class JokeListViewModel : INotifyPropertyChanged
 {
-    public event PropertyChangedEventHandler PropertyChanged;
+    ...
 
-    public ObservableCollection&lt;Joke&gt; Jokes { get; } = new ObservableCollection&lt;Joke&gt;();
+    public ObservableCollection&lt;Joke&gt; Jokes { get; };
 
-    public ICommand AddJokeCommand { get; }
-
-    private string _newJokeText;
-    public string NewJokeText
-    {
-        get =&gt; _newJokeText;
-        set
-        {
-            _newJokeText = value;
-
-            PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(nameof(NewJokeText)));
-        }
-    }
+    ...
 
     public JokeListViewModel()
     {
-        AddJokeCommand = new Command(() =&gt; OnAddJoke());
+        var items = GetMyAwesomeCollection();
+        Jokes = new ObservableCollection&lt;Joke&gt;(items);
+        ...
     }
 
-    private void OnAddJoke()
-    {
-        if (!string.IsNullOrWhiteSpace(NewJokeText))
-        {
-            Jokes.Add(new Joke { Text = NewJokeText });
-            NewJokeText = string.Empty;
-        }
-    }
+    ...
 }</code></pre>
 </div>
 </div>
@@ -474,11 +461,15 @@ Voor de DataTemplate wordt het item (één <code>Joke</code>) als BindingContext
 </div>
 <div class="listingblock">
 <div class="content">
-<pre class="highlightjs highlight"><code class="language-xml hljs" data-lang="xml">&lt;Entry Text="{Binding NewJokeText}"
-       Placeholder="Typ een grap..." /&gt;
-
-&lt;Button Text="Toevoegen"
-        Command="{Binding AddJokeCommand}" /&gt;</code></pre>
+<pre class="highlightjs highlight"><code class="language-xml hljs" data-lang="xml">&lt;CollectionView ItemsSource="{Binding Jokes}"&gt;
+    &lt;CollectionView.ItemTemplate&gt;
+        &lt;DataTemplate&gt;
+            &lt;Border Padding="10" Margin="4"&gt;
+                &lt;Label Text="{Binding Text}" /&gt;
+            &lt;/Border&gt;
+        &lt;/DataTemplate&gt;
+    &lt;/CollectionView.ItemTemplate&gt;
+&lt;/CollectionView&gt;</code></pre>
 </div>
 </div>
 <div class="paragraph">
