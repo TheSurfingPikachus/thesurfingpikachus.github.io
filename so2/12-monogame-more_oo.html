@@ -310,7 +310,7 @@ _current = Keyboard.GetState();</code></pre>
 <p>Dit is een typisch probleem in MonoGame.</p>
 </div>
 <div class="paragraph">
-<p>We gaan dit echter niet rechtstreeks in onze game code plaatsen, maar isoleren via het <strong>Facade Pattern</strong>.</p>
+<p>We gaan dit echter niet rechtstreeks in onze game code plaatsen, maar isoleren via het <a href="https://refactoring.guru/design-patterns/facade"><strong>Facade Pattern</strong></a>.</p>
 </div>
 </div>
 </div>
@@ -634,8 +634,8 @@ De context bevat de gedeelde toestand van de game: de objecten, de services en d
 </div>
 </div>
 <div class="paragraph">
-<p>Omdat <code>GraphicsFacade</code> &amp; <code>KeyboardFacade</code> static is, hoeft die niet noodzakelijk als instantie in de context te zitten.
-Die kan rechtstreeks statisch gebruikt worden, maar een facade hoeft niet altijd static te zijn.
+<p>Omdat <code>GraphicsFacade</code> &amp; <code>KeyboardFacade</code> static zijn, hoeven die niet noodzakelijk als instantie in de context te zitten.
+Die kan rechtstreeks statisch gebruikt worden, maar onthoud dat een facade niet static hoeft te zijn.
 Conceptueel hoort die wel bij dezelfde laag van gedeelde infrastructuur.</p>
 </div>
 </div>
@@ -943,15 +943,18 @@ Kan ook als static klasse, hangt van de context af. Bij voorkeur proberen we wel
 <div class="content">
 <pre class="highlightjs highlight"><code class="language-csharp hljs" data-lang="csharp">public class Sprite
 {
-    protected Texture2D Texture;
-    public Vector2 Position { get; set; }
+    public Texture2D Texture { get; init;};
+    public Vector2 Position { get; init; }
 
-    public float Scale { get; set; }
+    public float Scale { get; init; }
+    public float Speed { get; init; }
 
-    public Sprite(Texture2D texture, Vector2 position)
+
+    public Sprite(Texture2D texture, Vector2 position, float speed)
     {
         Texture = texture;
         Position = position;
+        Speed = speed;
     }
 
     public virtual void Update(GameTime gameTime)
@@ -979,25 +982,22 @@ Kan ook als static klasse, hangt van de context af. Bij voorkeur proberen we wel
 {
     private InputService _input;
 
-    public float Speed { get; init; }
-
     public Player(Texture2D texture,
                   Vector2 position,
                   float speed,
                   InputService input)
-        : base(texture, position)
+        : base(texture, position, speed)
     {
-        Speed = speed;
         _input = input;
     }
 
     public override void Update(GameTime gameTime)
     {
-        if (_input.ShouldGoLeft())
-            Position.X -= Speed;
+        if (_inputService.ShouldGoRight())
+            UpdatePositionX(+Speed);
 
-        if (_input.ShouldGoRight())
-            Position.X += Speed;
+        if (_inputService.ShouldGoLeft())
+            UpdatePositionX(-Speed);
 
         ...
         // We hebben natuurlijk ook nog Up &amp; Down
@@ -1069,19 +1069,16 @@ Kan ook als static klasse, hangt van de context af. Bij voorkeur proberen we wel
 <div class="content">
 <pre class="highlightjs highlight"><code class="language-csharp hljs" data-lang="csharp">public class Shark : Sprite
 {
-    public float Speed { get; init; }
-
     public Shark(Texture2D texture,
                  Vector2 position,
-                float speed)
-        : base(texture, position)
+                 float speed)
+        : base(texture, position, speed)
     {
-        Speed = speed;
     }
 
     public override void Update(GameTime gameTime)
     {
-        Position.X -= Speed;
+        shark.UpdatePositionX( - shark.Speed);
     }
 
     ...
@@ -1134,7 +1131,7 @@ Kan ook als static klasse, hangt van de context af. Bij voorkeur proberen we wel
 <p>Wanneer dit op meerdere plaatsen gebeurt, krijgen we duplicatie.</p>
 </div>
 <div class="paragraph">
-<p>Daarom gebruiken we een <strong>Factory Pattern</strong>.</p>
+<p>Daarom gebruiken we een <a href="https://refactoring.guru/design-patterns/factory-method"><strong>Factory Pattern</strong></a>.</p>
 </div>
 <div class="admonitionblock tip">
 <table>
@@ -1143,7 +1140,7 @@ Kan ook als static klasse, hangt van de context af. Bij voorkeur proberen we wel
 <i class="fa icon-tip" title="Tip"></i>
 </td>
 <td class="content">
-Factories kunnen gemaakt worden per object type, of per domein. We kunnen een SharkFactory hebben, maar we zouden evengoed kunnen groeperen en een SpriteFactory hebben.
+Factories kunnen gemaakt worden per object type, of per domein. We kunnen een SharkFactory hebben, maar we zouden evengoed kunnen groeperen en een SpriteFactory of EnemyFactory hebben.
 </td>
 </tr>
 </table>
@@ -1154,29 +1151,9 @@ Factories kunnen gemaakt worden per object type, of per domein. We kunnen een Sh
 <div class="content">
 <pre class="highlightjs highlight"><code class="language-csharp hljs" data-lang="csharp">public class SharkFactory
 {
-    private Context _context;
-
-    public SharkFactory(Context context)
+    public Shark Create(Texture2D texture, float x, float y, float speed, float scale)
     {
-        _context = context;
-    }
-
-    public Shark Create(float x, float y)
-    {
-        var texture =
-            _context.Assets.GetTexture(
-                AssetNames.Shark);
-
-        var shark =
-            new Shark(texture, new Vector2(x, y));
-
-        shark.Speed =
-            GameSettings.SharkSpeed;
-
-        shark.Scale =
-            GameSettings.SharkScale;
-
-        return shark;
+        return new Shark(texture, new Vector2(x, y), speed, scale);
     }
 }</code></pre>
 </div>

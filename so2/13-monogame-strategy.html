@@ -156,8 +156,6 @@
 <div class="content">
 <pre class="highlightjs highlight"><code class="language-csharp hljs" data-lang="csharp">public class Shark : Sprite
 {
-    public float Speed { get; set; }
-
     ...
 
     public override void Update(GameTime gameTime)
@@ -268,7 +266,7 @@ We halen het gedrag eruit en stoppen het in aparte objecten.
 </blockquote>
 </div>
 <div class="paragraph">
-<p>De haai krijgt dan een <strong>strategie</strong> die bepaalt hoe hij beweegt.</p>
+<p>De haai krijgt dan een <strong>strategie</strong> die bepaalt hoe hij beweegt door middel van het toepassen van het <a href="https://refactoring.guru/design-patterns/strategy"><strong>Strategy Pattern</strong></a>.</p>
 </div>
 </div>
 </div>
@@ -300,18 +298,11 @@ Elke beweging moet weten hoe ze een haai moet updaten.
 <h3 id="_rechte_beweging"><a class="anchor" href="#_rechte_beweging"></a>Rechte beweging</h3>
 <div class="listingblock">
 <div class="content">
-<pre class="highlightjs highlight"><code class="language-csharp hljs" data-lang="csharp">public class StraightMovement : ISharkMovement
+<pre class="highlightjs highlight"><code class="language-csharp hljs" data-lang="csharp">public class StraightMovementStrategy : IMovementStrategy
 {
-    private float _speed;
-
-    public StraightMovement(float speed)
-    {
-        _speed = speed;
-    }
-
     public void Update(Shark shark)
     {
-        shark.Position.X -= _speed;
+        shark.UpdatePositionX( - shark.Speed);
     }
 }</code></pre>
 </div>
@@ -321,19 +312,11 @@ Elke beweging moet weten hoe ze een haai moet updaten.
 <h3 id="_diagonal_beweging"><a class="anchor" href="#_diagonal_beweging"></a>Diagonal beweging</h3>
 <div class="listingblock">
 <div class="content">
-<pre class="highlightjs highlight"><code class="language-csharp hljs" data-lang="csharp">public class DiagonalMovement : ISharkMovement
+<pre class="highlightjs highlight"><code class="language-csharp hljs" data-lang="csharp">public class DiagonalMovementStrategy : IMovementStrategy
 {
-    private float _speed;
-
-    public DiagonalMovement(float speed)
-    {
-        _speed = speed;
-    }
-
     public void Update(Shark shark)
     {
-        shark.Position.X -= _speed;
-        shark.Position.Y += 1;
+        shark.UpdatePosition(-shark.Speed, shark.Speed * 0.25F);
     }
 }</code></pre>
 </div>
@@ -348,19 +331,19 @@ Elke beweging moet weten hoe ze een haai moet updaten.
 <div class="content">
 <pre class="highlightjs highlight"><code class="language-csharp hljs" data-lang="csharp">public class Shark : Sprite
 {
-    private ISharkMovement _movement;
+    private IMovementStrategy _movementStrategy;
 
     public Shark(Texture2D texture,
                  Vector2 position,
-                 ISharkMovement movement)
+                 IMovementStrategy movementStrategy)
         : base(texture, position)
     {
-        _movement = movement;
+        _movementStrategy = movementStrategy;
     }
 
     public override void Update(GameTime gameTime)
     {
-        _movement.Update(this);
+        _movementStrategy.Update(this);
     }
 }</code></pre>
 </div>
@@ -378,23 +361,22 @@ Elke beweging moet weten hoe ze een haai moet updaten.
 <div class="sectionbody">
 <div class="listingblock">
 <div class="content">
-<pre class="highlightjs highlight"><code class="language-csharp hljs" data-lang="csharp">public Shark Create(float x, float y)
+<pre class="highlightjs highlight"><code class="language-csharp hljs" data-lang="csharp">public Shark Create(Texture2D texture, float x, float y)
 {
-    var texture =
-        _context.Assets.GetTexture(AssetNames.Shark);
-
-    ISharkMovement movement;
+    // Typisch zou je hier de movementStrategy meekrijgen, maar om het voorbeeld eenvoudig te houden maken we een
+    // willekeurig getal
+    IMovementStrategy movementStrategy;
 
     if (Random.Shared.Next(2) == 0)
     {
-        movement = new StraightMovement(2f);
+        movementStrategy = new StraightMovement();
     }
     else
     {
-        movement = new DiagonalMovement(2f);
+        movementStrategy = new DiagonalMovement();
     }
 
-    return new Shark(texture, new Vector2(x, y), movement);
+    return new Shark(texture, new Vector2(x, y), movementStrategy);
 }</code></pre>
 </div>
 </div>
