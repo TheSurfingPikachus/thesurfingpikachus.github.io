@@ -3,7 +3,7 @@
   <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width,initial-scale=1">
-    <title>Maui - WebAPI :: Softwareontwerp 2 (BETA)</title>
+    <title>Maui - Navigatie &amp; Messaging :: Softwareontwerp 2 (BETA)</title>
     <meta name="generator" content="Antora 3.1.14">
     <link rel="stylesheet" href="../_/css/site.css">
   </head>
@@ -100,10 +100,13 @@
     <a class="nav-link" href="20-maui_basics.html">Basis</a>
   </li>
       <li class="nav-item is-active" data-depth="2">
-    <a class="nav-link" href="21-maui_ioc-di.html">IoC &amp; DI</a>
+    <a class="nav-link" href="21-maui_ioc-di.html">IoC, DI &amp; repository</a>
   </li>
       <li class="nav-item is-active" data-depth="2">
-    <a class="nav-link" href="22-maui_mvvm.html">MVVM &amp; Navigatie</a>
+    <a class="nav-link" href="22-maui_mvvm.html">MVVM &amp; opslag</a>
+  </li>
+      <li class="nav-item is-active is-current-page" data-depth="2">
+    <a class="nav-link" href="23-maui_webapi.html">Navigatie &amp; berichten</a>
   </li>
 </ul>
   </li>
@@ -132,7 +135,8 @@
 <nav class="breadcrumbs" aria-label="breadcrumbs">
   <ul>
     <li><a href="index.html">Softwareontwerp 2</a></li>
-    <li><a href="23-maui_webapi.html">Maui - WebAPI</a></li>
+    <li>MAUI</li>
+    <li><a href="23-maui_webapi.html">Navigatie &amp; berichten</a></li>
   </ul>
 </nav>
 </div>
@@ -141,13 +145,499 @@
   <div class="toc-menu"></div>
 </aside>
 <article class="doc">
-<h1 class="page">Maui - WebAPI</h1>
+<h1 class="page">Maui - Navigatie &amp; Messaging</h1>
+<div id="preamble">
+<div class="sectionbody">
 <div class="paragraph">
-<p>Continue on jokeservice, create new joke service, showing DI again
-<a href="https://v2.jokeapi.dev/joke/Any?blacklistFlags=nsfw,racist,sexist&amp;type=single" class="bare">https://v2.jokeapi.dev/joke/Any?blacklistFlags=nsfw,racist,sexist&amp;type=single</a></p>
+<p>In de vorige les bouwden we een MVVM-app met data binding, CollectionView en persistentie via LiteDB.
+Nu voegen we navigatie toe tussen schermen, en leren we hoe ViewModels met elkaar kunnen communiceren zonder rechtstreekse koppeling.</p>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="_navigatie_in_een_mvvm_app"><a class="anchor" href="#_navigatie_in_een_mvvm_app"></a>Navigatie in een MVVM-app</h2>
+<div class="sectionbody">
+<div class="paragraph">
+<p>Navigatie is ook logica, dus die willen we liefst niet in de code-behind van de View stoppen.
+In MAUI met Shell navigeren we meestal met <code>Shell.Current.GoToAsync</code>.</p>
 </div>
 <div class="paragraph">
-<p>Kunnen we iets doen met: <a href="https://vedromdest.github.io/pg2/01-http-apis.html" class="bare">https://vedromdest.github.io/pg2/01-http-apis.html</a> ?</p>
+<p>Zonder MVVM zouden we bijvoorbeeld in code-behind doen:</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="highlightjs highlight"><code class="language-csharp hljs" data-lang="csharp">await Shell.Current.GoToAsync(nameof(JokeDetailPage));</code></pre>
+</div>
+</div>
+<div class="paragraph">
+<p>In een MVVM-opzet willen we navigatie vanuit een ViewModel kunnen aansturen, zonder een rechtstreekse afhankelijkheid op <code>Shell.Current</code>.</p>
+</div>
+<div class="paragraph">
+<p>Daarom creëren we een NavigationService waar we Shell-navigatie in plaatsen.</p>
+</div>
+<div class="sect2">
+<h3 id="_shell_routes_definiëren"><a class="anchor" href="#_shell_routes_definiëren"></a>Shell-routes definiëren</h3>
+<div class="paragraph">
+<p>Om Shell-navigatie te kunnen gebruiken moet de Shell weet hebben van de pagina&#8217;s waarnaar men kan gaan. Dit laat je weten via de routes.</p>
+</div>
+<div class="paragraph">
+<p>Stel dat we een pagina hebben genaamd <code>JokeDetailPage</code>, dan zou de registratie hiervan als volgt zijn:</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="highlightjs highlight"><code class="language-csharp hljs" data-lang="csharp">Routing.RegisterRoute(nameof(JokeDetailPage), typeof(JokeDetailPage));</code></pre>
+</div>
+</div>
+<div class="paragraph">
+<p>Deze registratie gebeurt binnen <code>MauiProgram.cs</code>, in de methode <code>CreateMauiApp</code>.</p>
+</div>
+</div>
+<div class="sect2">
+<h3 id="_navigationservice"><a class="anchor" href="#_navigationservice"></a>NavigationService</h3>
+<div class="paragraph">
+<p>Zoals gezegd willen we geen harde afhankelijkheid van Shell in onze ViewModellen, dus we gaan de navigatie encapsuleren in een NavigationService. Hiervoor definiëren we eerst een interface:</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="highlightjs highlight"><code class="language-csharp hljs" data-lang="csharp">public interface INavigationService
+{
+    Task GoToAsync(string route, IDictionary&lt;string, object&gt;? parameters = null);
+
+    Task GoBackAsync();
+}</code></pre>
+</div>
+</div>
+<div class="paragraph">
+<p>Implementatie op basis van Shell:</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="highlightjs highlight"><code class="language-csharp hljs" data-lang="csharp">public class ShellNavigationService : INavigationService
+{
+    public async Task GoToAsync(string route, IDictionary&lt;string, object&gt;? parameters = null)
+    {
+        if (parameters is null)
+            await Shell.Current.GoToAsync(route);
+        else
+            await Shell.Current.GoToAsync(route, parameters);
+    }
+
+    public async Task GoBackAsync()
+    {
+        await Shell.Current.Navigation.PopAsync();
+    }
+}</code></pre>
+</div>
+</div>
+<div class="paragraph">
+<p>Registratie in <code>MauiProgram.cs</code>:</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="highlightjs highlight"><code class="language-csharp hljs" data-lang="csharp">...
+builder.Services.AddTransient&lt;INavigationService, ShellNavigationService&gt;();
+...</code></pre>
+</div>
+</div>
+</div>
+<div class="sect2">
+<h3 id="_navigeren_vanuit_een_viewmodel"><a class="anchor" href="#_navigeren_vanuit_een_viewmodel"></a>Navigeren vanuit een ViewModel</h3>
+<div class="paragraph">
+<p>Nu kan een ViewModel navigatie vragen via de service (de INotifyPropertyChanged is even weggelaten om te focussen op de navigatie):</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="highlightjs highlight"><code class="language-csharp hljs" data-lang="csharp">public class JokeListViewModel
+{
+    private readonly INavigationService _navigationService;
+
+    public ObservableCollection&lt;JokeViewModel&gt; Jokes { get; init; }
+
+    private JokeViewModel? _selectedJoke;
+    public JokeViewModel? SelectedJoke
+    {
+        get =&gt; _selectedJoke;
+        set
+        {
+            _selectedJoke = value;
+            OnJokeSelected(value);
+        }
+    }
+
+    public JokeListViewModel(IJokeService jokeService, INavigationService navigationService)
+    {
+        _jokeService = jokeService;
+        _navigationService = navigationService;
+
+        Jokes = new ObservableCollection&lt;JokeViewModel&gt;();
+    }
+
+    private async void OnJokeSelected(JokeViewModel? joke)
+    {
+        if (JokeViewModel is null)
+            return;
+
+        var parameters = new Dictionary&lt;string, object&gt;
+        {
+            ["jokeId"] = joke.Id
+        };
+
+        await _navigationService.GoToAsync(nameof(JokeDetailPage), parameters);
+    }
+}</code></pre>
+</div>
+</div>
+<div class="paragraph">
+<p>De CollectionView in XAML bindt <code>SelectedItem</code> op dit ViewModel:</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="highlightjs highlight"><code class="language-xml hljs" data-lang="xml">&lt;CollectionView ItemsSource="{Binding Jokes}"
+                SelectionMode="Single"
+                SelectedItem="{Binding SelectedJoke}"&gt;
+    &lt;CollectionView.ItemTemplate&gt;
+        &lt;DataTemplate&gt;
+            &lt;Border Padding="10" Margin="4"&gt;
+                &lt;Label Text="{Binding Text}" /&gt;
+            &lt;/Border&gt;
+        &lt;/DataTemplate&gt;
+    &lt;/CollectionView.ItemTemplate&gt;
+&lt;/CollectionView&gt;</code></pre>
+</div>
+</div>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="_data_doorgeven_met_iqueryattributable"><a class="anchor" href="#_data_doorgeven_met_iqueryattributable"></a>Data doorgeven met IQueryAttributable</h2>
+<div class="sectionbody">
+<div class="paragraph">
+<p>Shell kan parameters doorgeven aan de doelpagina. Die parameters komen terecht in een dictionary waar het ViewModel uit kan lezen.</p>
+</div>
+<div class="paragraph">
+<p>Dit doe je door de ingebouwde MAUI-interface <code>IQueryAttributable</code> te implementeren op het ViewModel.
+Je schrijft deze interface niet zelf — ze zit in het framework en je implementeert ze gewoon:</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="highlightjs highlight"><code class="language-csharp hljs" data-lang="csharp">// Ingebouwd in MAUI — niet zelf schrijven
+public interface IQueryAttributable
+{
+    void ApplyQueryAttributes(IDictionary&lt;string, object&gt; query);
+}</code></pre>
+</div>
+</div>
+<div class="paragraph">
+<p>Wanneer we navigeren met:</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="highlightjs highlight"><code class="language-csharp hljs" data-lang="csharp">var parameters = new Dictionary&lt;string, object&gt;
+{
+    ["jokeId"] = selectedJoke.Id
+};
+
+await _navigationService.GoToAsync(nameof(JokeDetailPage), parameters);</code></pre>
+</div>
+</div>
+<div class="paragraph">
+<p>dan kunnen we deze parameter opvangen in het ViewModel van <code>JokeDetailPage</code>:</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="highlightjs highlight"><code class="language-csharp hljs" data-lang="csharp">public class JokeDetailViewModel : IQueryAttributable
+{
+    private JokeViewModel? _joke;
+    public JokeViewModel? Joke
+    {
+        ...
+    }
+
+    public void ApplyQueryAttributes(IDictionary&lt;string, object&gt; query)
+    {
+        if (query.TryGetValue("jokeId", out var jokeId) )
+        {
+            var joke = _repository.GetById(joke);
+            Joke = new JokeViewModel { Text = joke.Text })
+        }
+    }
+}</code></pre>
+</div>
+</div>
+<div class="paragraph">
+<p>In de View stellen we dit ViewModel in als BindingContext, net zoals we al gezien hebben:</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="highlightjs highlight"><code class="language-csharp hljs" data-lang="csharp">public partial class JokeDetailPage : ContentPage
+{
+    public JokeDetailPage(JokeDetailViewModel vm)
+    {
+        InitializeComponent();
+        BindingContext = vm;
+    }
+}</code></pre>
+</div>
+</div>
+<div class="admonitionblock important">
+<table>
+<tr>
+<td class="icon">
+<i class="fa icon-important" title="Important"></i>
+</td>
+<td class="content">
+De key die je gebruikt in de parameters (<code>"jokeId"</code>) moet overeenkomen met de key die je gebruikt in <code>ApplyQueryAttributes</code>.
+</td>
+</tr>
+</table>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="_weakreferencemessenger"><a class="anchor" href="#_weakreferencemessenger"></a>WeakReferenceMessenger</h2>
+<div class="sectionbody">
+<div class="paragraph">
+<p>Nu twee schermen actief zijn, rijst de vraag: hoe weet de ene ViewModel dat de andere iets gewijzigd heeft?</p>
+</div>
+<div class="paragraph">
+<p>Stel: de gebruiker navigeert vanuit <code>JokeListPage</code> naar <code>JokeDetailPage</code> om een grap te verwijderen.
+Wanneer hij terugkeert, staat de <code>JokeListViewModel</code> nog altijd in het geheugen, maar zijn <code>ObservableCollection</code> weet niets van de wijziging.</p>
+</div>
+<div class="paragraph">
+<p>Een naiëve oplossing is de data telkens opnieuw laden wanneer het scherm zichtbaar wordt.
+Dat werkt, maar het schaalt slecht en koppelt de schermen indirect.</p>
+</div>
+<div class="paragraph">
+<p>Een schonere aanpak: laat de <code>JokeService</code> een <strong>bericht</strong> sturen zodra er iets veranderd is, en laat de <code>JokeListViewModel</code> naar dat bericht luisteren.
+De service weet niet wie er luistert, het ViewModel weet niet wie er gestuurd heeft.</p>
+</div>
+<div class="paragraph">
+<p><code>WeakReferenceMessenger</code> is een publish/subscribe mechanisme uit het NuGet-pakket <code>CommunityToolkit.Mvvm</code>.</p>
+</div>
+<div class="ulist">
+<ul>
+<li>
+<p>Een <strong>sender</strong> stuurt een bericht via <code>Send</code>.</p>
+</li>
+<li>
+<p>Een <strong>ontvanger</strong> registreert zich via <code>Register</code> en reageert wanneer het bericht binnenkomt.</p>
+</li>
+</ul>
+</div>
+<div class="paragraph">
+<p>Het woord <strong>Weak</strong> slaat op hoe de messenger de ontvangers bijhoudt: via zwakke referenties.
+Dit betekent dat de messenger de garbage collector niet belet om een ViewModel op te ruimen wanneer het niet meer actief is.
+Zo vermijd je geheugenlekken, zonder dat je ontvangers manueel moet afmelden.</p>
+</div>
+<div class="sect2">
+<h3 id="_nuget_pakket"><a class="anchor" href="#_nuget_pakket"></a>NuGet-pakket</h3>
+<div class="paragraph">
+<p>Voeg <code>CommunityToolkit.Mvvm</code> toe aan je project via NuGet.</p>
+</div>
+</div>
+<div class="sect2">
+<h3 id="_message_klassen"><a class="anchor" href="#_message_klassen"></a>Message-klassen</h3>
+<div class="paragraph">
+<p>Een message-klasse is een eenvoudige dataklasse die de informatie bevat die je wil doorgeven.</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="highlightjs highlight"><code class="language-csharp hljs" data-lang="csharp">public class JokeRemovedMessage
+{
+    public Joke Joke { get; init; }
+
+    public JokeRemovedMessage(Joke joke)
+    {
+        Joke = joke;
+    }
+}</code></pre>
+</div>
+</div>
+<div class="paragraph">
+<p>Zet deze klassen bij voorkeur in een aparte map <code>Messages</code>.</p>
+</div>
+</div>
+<div class="sect2">
+<h3 id="_versturen_vanuit_de_service"><a class="anchor" href="#_versturen_vanuit_de_service"></a>Versturen vanuit de service</h3>
+<div class="paragraph">
+<p>De <code>JokeService</code> stuurt een bericht na elke relevante actie:</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="highlightjs highlight"><code class="language-csharp hljs" data-lang="csharp">using CommunityToolkit.Mvvm.Messaging;
+
+public class JokeService : IJokeService
+{
+    ...
+
+    public void Remove(Joke joke)
+    {
+        _repository.Remove(joke);
+
+        WeakReferenceMessenger.Default.Send(new JokeRemovedMessage(joke));
+    }
+
+    ...
+}</code></pre>
+</div>
+</div>
+</div>
+<div class="sect2">
+<h3 id="_ontvangen_in_het_viewmodel"><a class="anchor" href="#_ontvangen_in_het_viewmodel"></a>Ontvangen in het ViewModel</h3>
+<div class="paragraph">
+<p>De <code>JokeListViewModel</code> registreert zich in de constructor om berichten te ontvangen:</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="highlightjs highlight"><code class="language-csharp hljs" data-lang="csharp">using CommunityToolkit.Mvvm.Messaging;
+
+public class JokeListViewModel : INotifyPropertyChanged
+{
+    ...
+
+    public JokeListViewModel(IJokeService jokeService, INavigationService navigationService)
+    {
+        ...
+
+        WeakReferenceMessenger.Default.Register&lt;JokeRemovedMessage&gt;(this, (sender, message) =&gt;
+        {
+            var item = Jokes.FirstOrDefault(j =&gt; j.Text == message.Joke.Text);
+            if (item != null)
+                Jokes.Remove(item);
+        });
+    }
+}</code></pre>
+</div>
+</div>
+<div class="paragraph">
+<p>Wanneer nu vanuit <code>JokeDetailPage</code> een grap verwijderd wordt, reageert de <code>JokeListViewModel</code> automatisch — zonder dat de twee ViewModels elkaar kennen.</p>
+</div>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="_oefening"><a class="anchor" href="#_oefening"></a>Oefening</h2>
+<div class="sectionbody">
+<div class="paragraph">
+<p>Vertrek van de Joke-app uit de vorige les en breid deze uit met navigatie en messaging.</p>
+</div>
+<div class="ulist">
+<ul>
+<li>
+<p>Voeg een detailscherm toe waarop een geselecteerde grap uit de CollectionView bewerkt of verwijderd kan worden. Navigeer er naartoe via de <code>NavigationService</code> en geef de geselecteerde grap mee als parameter via <code>IQueryAttributable</code>. Typisch gaan we het id meegeven met de navigation waarop de doel pagina de data ophaalt uit de database, maar voor deze oefening is het ok om het object mee te geven.</p>
+</li>
+<li>
+<p>Wanneer een grap bewerkt of verwijderd wordt via de <code>JokeService</code>, moet de CollectionView op het lijstscherm automatisch bijgewerkt worden via <code>WeakReferenceMessenger</code>.</p>
+</li>
+</ul>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="_webapi"><a class="anchor" href="#_webapi"></a>WebAPI</h2>
+<div class="sectionbody">
+<div class="paragraph">
+<p>Tot nu toe kwamen grappen uit het geheugen of uit een lokale LiteDB-database.
+Dankzij DI kunnen we even gemakkelijk overstappen op een volledig andere bron: een WebAPI.</p>
+</div>
+<div class="paragraph">
+<p>We gebruiken de openbare <a href="https://v2.jokeapi.dev">JokeAPI</a> die gratis grappen aanbiedt.
+Een willekeurige grap ophalen doe je via:</p>
+</div>
+<div class="paragraph">
+<p><code>https://v2.jokeapi.dev/joke/Any?blacklistFlags=nsfw,racist,sexist&amp;type=single</code></p>
+</div>
+<div class="paragraph">
+<p>Een typisch antwoord ziet er zo uit:</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="highlightjs highlight"><code class="language-json hljs" data-lang="json">{
+    "category": "Programming",
+    "type": "single",
+    "joke": "A SQL query walks into a bar, walks up to two tables and asks: 'Can I join you?'",
+    "safe": true
+}</code></pre>
+</div>
+</div>
+<div class="sect2">
+<h3 id="_response_dto"><a class="anchor" href="#_response_dto"></a>Response DTO</h3>
+<div class="paragraph">
+<p>Om de JSON te deserialiseren, maken we een eenvoudige DTO-klasse.
+Het attribuut <code>[JsonPropertyName]</code> koppelt de C#-property aan de juiste JSON-sleutel:</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="highlightjs highlight"><code class="language-csharp hljs" data-lang="csharp">using System.Text.Json.Serialization;
+
+public class JokeApiResponse
+{
+    [JsonPropertyName("joke")]
+    public string Joke { get; set; }
+}</code></pre>
+</div>
+</div>
+</div>
+<div class="sect2">
+<h3 id="_jokeapiservice"><a class="anchor" href="#_jokeapiservice"></a>JokeApiService</h3>
+<div class="paragraph">
+<p>We maken een nieuwe implementatie van <code>IJokeService</code> die de API aanroept.
+<code>HttpClient</code> wordt gewoon aangemaakt in de klasse zelf.</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="highlightjs highlight"><code class="language-csharp hljs" data-lang="csharp">public class JokeApiService : IJokeService
+{
+    private const string API_URL =
+        "https://v2.jokeapi.dev/joke/Any?blacklistFlags=nsfw,racist,sexist&amp;type=single";
+
+    private readonly HttpClient _httpClient = new HttpClient();
+
+    public async Task&lt;Joke&gt; GetRandomAsync()
+    {
+        var response = await _httpClient.GetFromJsonAsync&lt;JokeApiResponse&gt;(API_URL);
+        return new Joke { Text = response?.Joke ?? "" };
+    }
+
+    // Schrijfoperaties zijn niet van toepassing voor een externe API
+    public void Add(Joke joke) { }
+    public void Remove(Joke joke) { }
+    public IEnumerable&lt;Joke&gt; GetAll() =&gt; Enumerable.Empty&lt;Joke&gt;();
+}</code></pre>
+</div>
+</div>
+</div>
+<div class="sect2">
+<h3 id="_di_registratie_aanpassen"><a class="anchor" href="#_di_registratie_aanpassen"></a>DI-registratie aanpassen</h3>
+<div class="paragraph">
+<p>In <code>MauiProgram.cs</code> wissel je de registratie:</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="highlightjs highlight"><code class="language-csharp hljs" data-lang="csharp">// Was:
+// builder.Services.AddSingleton&lt;IJokeRepository, LiteDBJokeRepository&gt;();
+// builder.Services.AddTransient&lt;IJokeService, JokeService&gt;();
+
+// Nu:
+builder.Services.AddTransient&lt;IJokeService, JokeApiService&gt;();</code></pre>
+</div>
+</div>
+<div class="paragraph">
+<p>De ViewModel en de pagina&#8217;s veranderen niet: die werken nog altijd via <code>IJokeService</code>, volledig onbewust van waar de grappen vandaan komen.
+Dat is de kracht van DI: een fundamenteel andere databron — lokaal bestand versus het internet — vereist slechts één gewijzigde lijn.</p>
+</div>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="_oefening_2"><a class="anchor" href="#_oefening_2"></a>Oefening</h2>
+<div class="sectionbody">
+<div class="paragraph">
+<p>Voeg een tweede implementatie van <code>IJokeService</code> toe die grappen ophaalt via de JokeAPI.
+Pas de DI-registratie in <code>MauiProgram.cs</code> aan zodat de app gebruik maakt van deze nieuwe implementatie in plaats van de lokale <code>JokeService</code>.
+De rest van de applicatie — ViewModel, pagina&#8217;s — mag niets wijzigen.</p>
+</div>
+</div>
 </div>
 </article>
   </div>

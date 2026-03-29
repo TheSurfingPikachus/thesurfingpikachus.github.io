@@ -100,10 +100,13 @@
     <a class="nav-link" href="20-maui_basics.html">Basis</a>
   </li>
       <li class="nav-item is-active" data-depth="2">
-    <a class="nav-link" href="21-maui_ioc-di.html">IoC &amp; DI</a>
+    <a class="nav-link" href="21-maui_ioc-di.html">IoC, DI &amp; repository</a>
   </li>
       <li class="nav-item is-active is-current-page" data-depth="2">
-    <a class="nav-link" href="22-maui_mvvm.html">MVVM &amp; Navigatie</a>
+    <a class="nav-link" href="22-maui_mvvm.html">MVVM &amp; opslag</a>
+  </li>
+      <li class="nav-item is-active" data-depth="2">
+    <a class="nav-link" href="23-maui_webapi.html">Navigatie &amp; berichten</a>
   </li>
 </ul>
   </li>
@@ -133,7 +136,7 @@
   <ul>
     <li><a href="index.html">Softwareontwerp 2</a></li>
     <li>MAUI</li>
-    <li><a href="22-maui_mvvm.html">MVVM &amp; Navigatie</a></li>
+    <li><a href="22-maui_mvvm.html">MVVM &amp; opslag</a></li>
   </ul>
 </nav>
 </div>
@@ -202,6 +205,24 @@ Bevat geen logica behalve UI-logica (animaties, opmaak, simpele event-afhandelin
 <h2 id="_concreet_onze_joke_app_in_mvvm"><a class="anchor" href="#_concreet_onze_joke_app_in_mvvm"></a>Concreet: onze Joke-app in MVVM</h2>
 <div class="sectionbody">
 <div class="paragraph">
+<p>Voor we overschakelen naar MVVM, passen we eerst het model aan.
+Tot nu toe stelden we een grap voor als een losse <code>string</code>.
+Dat is handig om snel mee te starten, maar in een MVVM-opzet wil je een echte modelklasse — zodat het ViewModel properties kan binden en de klasse later uitgebreid kan worden (bv. met een datum of categorie).</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="highlightjs highlight"><code class="language-csharp hljs" data-lang="csharp">public class Joke
+{
+    public string Text { get; init; }
+
+    ...
+}</code></pre>
+</div>
+</div>
+<div class="paragraph">
+<p>Overal waar je eerder <code>string</code> gebruikte voor een grap, gebruik je voortaan <code>Joke</code>.</p>
+</div>
+<div class="paragraph">
 <p>De data van het model wordt gebruikt om de ViewModels op te bouwen. Deze ViewModels stellen dan via hun eigen eigenschappen de data ter beschikking van de UI.</p>
 </div>
 <div class="paragraph">
@@ -229,13 +250,13 @@ Hiermee bedoelen we dat als je model een eigenschap <code>Naam</code> heeft, dan
 <p>Dit zorgt ervoor dat de UI automatisch verandert wanneer het ViewModel verandert en dat het ViewModel verandert wanneer de gebruiker in de UI iets aanpast.</p>
 </div>
 <div class="paragraph">
-<p>Stel dat je een ViewModel <code>JokeViewModel</code> hebt, dan stel je in de view de BindingContext in:</p>
+<p>Stel dat je een ViewModel <code>JokeListViewModel</code> hebt, dan stel je in de view de BindingContext in:</p>
 </div>
 <div class="listingblock">
 <div class="content">
-<pre class="highlightjs highlight"><code class="language-csharp hljs" data-lang="csharp">public partial class JokePage : ContentPage
+<pre class="highlightjs highlight"><code class="language-csharp hljs" data-lang="csharp">public partial class JokeListPage : ContentPage
 {
-    public JokeListPage(JokeViewModel vm)
+    public JokeListPage(JokeListViewModel vm)
     {
         InitializeComponent();
 
@@ -273,8 +294,10 @@ Hiermee bedoelen we dat als je model een eigenschap <code>Naam</code> heeft, dan
 </div>
 <div class="listingblock">
 <div class="content">
-<pre class="highlightjs highlight"><code class="language-csharp hljs" data-lang="csharp">public class JokeListViewModel : BaseViewModel
+<pre class="highlightjs highlight"><code class="language-csharp hljs" data-lang="csharp">public class JokeListViewModel : INotifyPropertyChanged
 {
+    public event PropertyChangedEventHandler PropertyChanged;
+
     private readonly IJokeService _jokeService;
 
     public ICommand NewJokeCommand { get; }
@@ -359,6 +382,32 @@ Dit gebeurt door alle subscribers van het event aan te roepen:</p>
 <div class="paragraph">
 <p>"Ah, de property CurrentJoke is veranderd, ik moet de UI updaten."</p>
 </div>
+<div class="paragraph">
+<p>Een volledige bindbare property ziet er concreet zo uit:</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="highlightjs highlight"><code class="language-csharp hljs" data-lang="csharp">public class JokeListViewModel : INotifyPropertyChanged
+{
+    public event PropertyChangedEventHandler PropertyChanged;
+
+    private string _currentJoke = string.Empty;
+    public string CurrentJoke
+    {
+        get =&gt; _currentJoke;
+        set
+        {
+            if (_currentJoke == value) return;
+            _currentJoke = value;
+            PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(nameof(CurrentJoke)));
+        }
+    }
+}</code></pre>
+</div>
+</div>
+<div class="paragraph">
+<p>De check <code>if (_currentJoke == value) return;</code> voorkomt dat het event onnodig afgevuurd wordt wanneer de waarde niet veranderd is.</p>
+</div>
 </div>
 </div>
 <div class="sect1">
@@ -411,21 +460,28 @@ Dit gebeurt door alle subscribers van het event aan te roepen:</p>
 <i class="fa icon-important" title="Important"></i>
 </td>
 <td class="content">
-Voor de DataTemplate wordt het item (één <code>Joke</code>) als BindingContext gezet. De <code>Label</code> binnen de DataTemplate heeft dus <em>niet</em> de ViewModel als BindingContext, maar 1 enkele JokeModel.
+Voor de DataTemplate wordt het item (één <code>JokeViewModel</code>) als BindingContext gezet. De <code>Label</code> binnen de DataTemplate heeft dus <em>niet</em> de pagina-ViewModel als BindingContext, maar 1 enkele <code>JokeViewModel</code>.
 </td>
 </tr>
 </table>
 </div>
 <div class="paragraph">
-<p>Model:</p>
+<p>Item-ViewModel:</p>
 </div>
 <div class="listingblock">
 <div class="content">
-<pre class="highlightjs highlight"><code class="language-csharp hljs" data-lang="csharp">public class Joke
+<pre class="highlightjs highlight"><code class="language-csharp hljs" data-lang="csharp">public class JokeViewModel
 {
-    public string Text { get; set; } = string.Empty;
+    ...
+
+    public string Text { get; set; }
 }</code></pre>
 </div>
+</div>
+<div class="paragraph">
+<p>We gebruiken hier een <code>JokeViewModel</code> in plaats van de domeinklasse <code>Joke</code> rechtstreeks.
+Dit scherm heeft mogelijk niet alle properties van <code>Joke</code> nodig, of wil ze anders presenteren — bv. een afgekorte tekst of een berekende waarde.
+Door een apart item-ViewModel te maken, blijft de domeinklasse ongewijzigd en bevat de UI-klasse precies wat ze nodig heeft.</p>
 </div>
 </div>
 </div>
@@ -444,15 +500,15 @@ Voor de DataTemplate wordt het item (één <code>Joke</code>) als BindingContext
 {
     ...
 
-    public ObservableCollection&lt;Joke&gt; Jokes { get; };
+    public ObservableCollection&lt;JokeViewModel&gt; Jokes { get; };
 
     ...
 
-    public JokeListViewModel()
+    public JokeListViewModel(IJokeService jokeService)
     {
-        var items = GetMyAwesomeCollection();
-        Jokes = new ObservableCollection&lt;Joke&gt;(items);
-        ...
+        var jokes = jokeService.GetAll()
+                               .Select(j =&gt; new JokeViewModel { Text = j.Text });
+        Jokes = new ObservableCollection&lt;JokeViewModel&gt;(jokes);
     }
 
     ...
@@ -481,251 +537,75 @@ Voor de DataTemplate wordt het item (één <code>Joke</code>) als BindingContext
 </div>
 </div>
 <div class="sect1">
-<h2 id="_navigatie_in_een_mvvm_app"><a class="anchor" href="#_navigatie_in_een_mvvm_app"></a>Navigatie in een MVVM-app</h2>
+<h2 id="_repository_en_data_opslag_met_litedb"><a class="anchor" href="#_repository_en_data_opslag_met_litedb"></a>Repository en data-opslag met LiteDB</h2>
 <div class="sectionbody">
 <div class="paragraph">
-<p>Navigatie is ook logica, dus die willen we liefst niet in de code-behind van de View stoppen.
-In MAUI met Shell navigeren we meestal met <code>Shell.Current.GoToAsync</code>.</p>
+<p>Tot nu toe bewaarden we de grappen in het geheugen.
+We kunnen hetzelfde DI-principe toepassen voor echte data-opslag, via een repository en een database zoals LiteDB.</p>
 </div>
 <div class="paragraph">
-<p>Zonder MVVM zouden we bijvoorbeeld in code-behind doen:</p>
-</div>
-<div class="listingblock">
-<div class="content">
-<pre class="highlightjs highlight"><code class="language-csharp hljs" data-lang="csharp">await Shell.Current.GoToAsync(nameof(JokeDetailPage));</code></pre>
-</div>
-</div>
-<div class="paragraph">
-<p>In een MVVM-opzet willen we navigatie vanuit een ViewModel kunnen aansturen, zonder een rechtstreekse afhankelijkheid op <code>Shell.Current</code>.</p>
-</div>
-<div class="paragraph">
-<p>Daarom creëren we een NavigationService waar we Shell-navigatie in plaatsen.</p>
+<p><a href="https://www.litedb.org/">LiteDB</a> is een eenvoudige <a href="https://en.wikipedia.org/wiki/NoSQL">NoSQL-database</a> in één enkel bestand.
+Je kan er rechtstreeks C#-objecten in bewaren zonder tabellen of SQL te definiëren.</p>
 </div>
 <div class="sect2">
-<h3 id="_shell_routes_definiëren"><a class="anchor" href="#_shell_routes_definiëren"></a>Shell-routes definiëren</h3>
+<h3 id="_litedb_implementatie_van_de_repository"><a class="anchor" href="#_litedb_implementatie_van_de_repository"></a>LiteDB-implementatie van de repository</h3>
 <div class="paragraph">
-<p>Om Shell-navigatie te kunnen gebruiken moet de Shell weet hebben van de pagina&#8217;s waarnaar men kan gaan. Dit laat je weten via de routes.</p>
-</div>
-<div class="paragraph">
-<p>Stel dat we een pagina hebben genaamd <code>JokeDetailPage</code>, dan zou de registratie hiervan als volgt zijn:</p>
+<p>Je voegt ondersteuning toe voor LiteDB via NuGet in je project.</p>
 </div>
 <div class="listingblock">
 <div class="content">
-<pre class="highlightjs highlight"><code class="language-csharp hljs" data-lang="csharp">Routing.RegisterRoute(nameof(JokeDetailPage), typeof(JokeDetailPage));</code></pre>
-</div>
-</div>
-<div class="paragraph">
-<p>Deze registratie gebeurt binnen de MauiProgram.cs, in de methode <code>CreateMauiApp</code></p>
-</div>
-</div>
-<div class="sect2">
-<h3 id="_navigationservice"><a class="anchor" href="#_navigationservice"></a>NavigationService</h3>
-<div class="paragraph">
-<p>Zoals gezegd willen we geen harde afhankelijkheid van Shell in onze ViewModellen, dus we gaan de navigatie encapsuleren in een NavigationService. Hiervoor definiëren we eerst een interface:</p>
-</div>
-<div class="listingblock">
-<div class="content">
-<pre class="highlightjs highlight"><code class="language-csharp hljs" data-lang="csharp">public interface INavigationService
-{
-    Task GoToAsync(string route, IDictionary&lt;string, object&gt;? parameters = null);
+<pre class="highlightjs highlight"><code class="language-csharp hljs" data-lang="csharp">using LiteDB;
 
-    Task GoBackAsync();
-}</code></pre>
-</div>
-</div>
-<div class="paragraph">
-<p>Implementatie op basis van Shell:</p>
-</div>
-<div class="listingblock">
-<div class="content">
-<pre class="highlightjs highlight"><code class="language-csharp hljs" data-lang="csharp">public class ShellNavigationService : INavigationService
+public class LiteDBJokeRepository : IJokeRepository, IDisposable
 {
-    public Task GoToAsync(string route, IDictionary&lt;string, object&gt;? parameters = null)
+    private const string DATABASE_LOCATION = "joke_db.db";
+
+    private static LiteDatabase _database;
+
+    // We moeten altijd via een 'Collection' gaan, je kan dit vergelijken met een Table in gewone SQL databases
+    private ILiteCollection&lt;Joke&gt; JokeCollection
+        =&gt; _database.Value.GetCollection&lt;Joke&gt;();
+
+    public LiteDBJokeRepository()
     {
-        if (parameters is null)
-            return Shell.Current.GoToAsync(route);
-
-        return Shell.Current.GoToAsync(route, parameters);
+        _database = new LiteDatabase(DATABASE_LOCATION);
     }
 
-    public Task GoBackAsync()
+    public void Add(Joke joke)
+        =&gt; JokeCollection.Insert(joke);
+
+    public bool Exists(Joke joke)
+        =&gt; JokeCollection.Exists(x =&gt; x.Text == joke.Text);
+
+    public IEnumerable&lt;Joke&gt; GetAll()
+        =&gt; JokeCollection.FindAll();
+
+    public void Remove(Joke joke)
+        =&gt; JokeCollection.DeleteMany(x =&gt; x.Text == joke.Text);
+
+    public void Dispose()
     {
-        Shell.Current.Navigation.PopAsync();
+        // We moeten de database connectie sluiten als ons object vernietigd wordt.
+        if (_database.IsValueCreated)
+            _database.Value.Dispose();
     }
 }</code></pre>
-</div>
-</div>
-<div class="paragraph">
-<p>Registratie in <code>MauiProgram.cs</code>:</p>
-</div>
-<div class="listingblock">
-<div class="content">
-<pre class="highlightjs highlight"><code class="language-csharp hljs" data-lang="csharp">...
-builder.Services.AddTransient&lt;INavigationService, ShellNavigationService&gt;();
-...</code></pre>
 </div>
 </div>
 </div>
 <div class="sect2">
-<h3 id="_navigeren_vanuit_een_viewmodel"><a class="anchor" href="#_navigeren_vanuit_een_viewmodel"></a>Navigeren vanuit een ViewModel</h3>
-<div class="paragraph">
-<p>Nu kan een ViewModel navigatie vragen via de service (de INotifyPropertyChanged is even weggelaten om te focussen op de navigatie):</p>
-</div>
+<h3 id="_registratie_in_mauiprogram"><a class="anchor" href="#_registratie_in_mauiprogram"></a>Registratie in MauiProgram</h3>
 <div class="listingblock">
 <div class="content">
-<pre class="highlightjs highlight"><code class="language-csharp hljs" data-lang="csharp">public class JokeListViewModel
-{
-    private readonly INavigationService _navigationService;
+<pre class="highlightjs highlight"><code class="language-csharp hljs" data-lang="csharp">// Singleton omdat we willen vermijden dat we meerdere connecties openen naar LiteDB
+builder.Services.AddSingleton&lt;IJokeRepository, LiteDBJokeRepository&gt;();
 
-    public ObservableCollection&lt;Joke&gt; Jokes { get; } = new ObservableCollection&lt;Joke&gt;();
-
-    private Joke? _selectedJoke;
-    public Joke? SelectedJoke
-    {
-        get =&gt; _selectedJoke;
-        set
-        {
-            _selectedJoke = value;
-
-            OnJokeSelected(value);
-        }
-    }
-
-    public JokeListViewModel(
-        IJokeService jokeService,
-        INavigationService navigationService)
-    {
-        _jokeService = jokeService;
-        _navigationService = navigationService;
-    }
-
-    private async void OnJokeSelected(Joke joke)
-    {
-        var parameters = new Dictionary&lt;string, object&gt;
-        {
-            ["joke"] = joke
-        };
-
-        await _navigationService.GoToAsync(nameof(JokeDetailPage), parameters);
-    }
-}</code></pre>
+builder.Services.AddTransient&lt;IJokeService, JokeService&gt;();</code></pre>
 </div>
 </div>
 <div class="paragraph">
-<p>De CollectionView in XAML bindt <code>SelectedItem</code> op dit ViewModel:</p>
+<p>Voor de ViewModel en de pagina verandert er niets: die werken nog altijd via <code>IJokeService</code>, onbewust van LiteDB.</p>
 </div>
-<div class="listingblock">
-<div class="content">
-<pre class="highlightjs highlight"><code class="language-xml hljs" data-lang="xml">&lt;CollectionView ItemsSource="{Binding Jokes}"
-                SelectionMode="Single"
-                SelectedItem="{Binding SelectedJoke}"&gt;
-    &lt;CollectionView.ItemTemplate&gt;
-        &lt;DataTemplate&gt;
-            &lt;Border Padding="10" Margin="4"&gt;
-                &lt;Label Text="{Binding Text}" /&gt;
-            &lt;/Border&gt;
-        &lt;/DataTemplate&gt;
-    &lt;/CollectionView.ItemTemplate&gt;
-&lt;/CollectionView&gt;</code></pre>
-</div>
-</div>
-</div>
-</div>
-</div>
-<div class="sect1">
-<h2 id="_data_doorgeven_met_iqueryattributable"><a class="anchor" href="#_data_doorgeven_met_iqueryattributable"></a>Data doorgeven met IQueryAttributable</h2>
-<div class="sectionbody">
-<div class="paragraph">
-<p>Shell kan parameters doorgeven aan de doelpagina. Die parameters komen terecht in een dictionary waar de pagina of het ViewModel kan uit lezen.</p>
-</div>
-<div class="paragraph">
-<p>Een manier om deze parameters binnen te pakken is door de <code>IQueryAttributable</code>-interface te implementeren op het ViewModel.</p>
-</div>
-<div class="listingblock">
-<div class="content">
-<pre class="highlightjs highlight"><code class="language-csharp hljs" data-lang="csharp">public interface IQueryAttributable
-{
-    void ApplyQueryAttributes(IDictionary&lt;string, object&gt; query);
-}</code></pre>
-</div>
-</div>
-<div class="paragraph">
-<p>Wanneer we navigeren met:</p>
-</div>
-<div class="listingblock">
-<div class="content">
-<pre class="highlightjs highlight"><code class="language-csharp hljs" data-lang="csharp">var parameters = new Dictionary&lt;string, object&gt;
-{
-    ["joke"] = selectedJoke
-};
-
-await _navigationService.GoToAsync(nameof(JokeDetailPage), parameters);</code></pre>
-</div>
-</div>
-<div class="paragraph">
-<p>dan kunnen we deze parameter opvangen in het ViewModel van JokeDetailPage:</p>
-</div>
-<div class="listingblock">
-<div class="content">
-<pre class="highlightjs highlight"><code class="language-csharp hljs" data-lang="csharp">public class JokeDetailViewModel: IQueryAttributable
-{
-    private Joke? _joke;
-    public Joke? Joke
-    {
-        ...
-    }
-
-    public void ApplyQueryAttributes(IDictionary&lt;string, object&gt; query)
-    {
-        if (query.TryGetValue("joke", out var jokeObj) &amp;&amp; jokeObj is Joke joke)
-        {
-            Joke = joke;
-        }
-    }
-}</code></pre>
-</div>
-</div>
-<div class="paragraph">
-<p>In de View stellen we dit ViewModel in als BindingContext, net zoals we al gezien hebben:</p>
-</div>
-<div class="listingblock">
-<div class="content">
-<pre class="highlightjs highlight"><code class="language-csharp hljs" data-lang="csharp">public partial class JokeDetailPage : ContentPage
-{
-    public JokeDetailPage(JokeDetailViewModel vm)
-    {
-        InitializeComponent();
-
-        BindingContext = vm;
-    }
-}</code></pre>
-</div>
-</div>
-<div class="paragraph">
-<p>En in de XAML kunnen we de details tonen:</p>
-</div>
-<div class="listingblock">
-<div class="content">
-<pre class="highlightjs highlight"><code class="language-xml hljs" data-lang="xml">&lt;ContentPage xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
-             x:Class="JokeApp.Views.JokeDetailPage"&gt;
-    &lt;VerticalStackLayout Padding="20" Spacing="10"&gt;
-        &lt;Label Text="Details van de grap" FontSize="24" /&gt;
-        &lt;Label Text="{Binding Joke.Text}" FontSize="18" /&gt;
-    &lt;/VerticalStackLayout&gt;
-&lt;/ContentPage&gt;</code></pre>
-</div>
-</div>
-<div class="admonitionblock important">
-<table>
-<tr>
-<td class="icon">
-<i class="fa icon-important" title="Important"></i>
-</td>
-<td class="content">
-De key die je gebruikt in de parameters (<code>"joke"</code>) moet overeenkomen met de key die je gebruikt in <code>ApplyQueryAttributes</code>.
-</td>
-</tr>
-</table>
 </div>
 </div>
 </div>
@@ -733,13 +613,14 @@ De key die je gebruikt in de parameters (<code>"joke"</code>) moet overeenkomen 
 <h2 id="_oefening"><a class="anchor" href="#_oefening"></a>Oefening</h2>
 <div class="sectionbody">
 <div class="paragraph">
-<p>Vertrek van de Joke-app uit de vorige les en breng deze over naar MVVM. Je kan deze ook vinden op GitHub.</p>
+<p>Vertrek van de Joke-app uit de vorige les en breng deze over naar MVVM.</p>
 </div>
 <div class="paragraph">
-<p>Breid daarna de app uit met een extra knop die een nieuw scherm opent. Op dat scherm komt een CollectionView met alle grappen die momenteel in het systeem zitten. Onderaan staat een Label dat de volledig geselecteerde grap toont. Om te vermijden dat bepaalde grappen te veel ruimte innemen, mag elk item in de lijst maximaal twee lijnen tonen (<code>MaxLines</code>). Alleen het Label onderaan toont de volledige tekst.</p>
+<p>Voeg daarna een <code>CollectionView</code> toe op een tweede scherm waarop alle grappen uit de repository getoond worden. Je kan voorlopig dit scherm tonen bij de start van de applicatie, volgende les zien spreken we over navigatie.
+Onderaan staat een <code>Label</code> dat de volledig geselecteerde grap toont. Om te vermijden dat bepaalde grappen te veel ruimte innemen, mag elk item in de lijst maximaal twee lijnen tonen (<code>MaxLines</code>).</p>
 </div>
 <div class="paragraph">
-<p>Wanneer in het oorspronkelijke scherm op de knop wordt gedrukt om het lijstscherm te openen, wordt de huidige willekeurige grap als parameter doorgegeven. In het scherm met de CollectionView moet deze grap meteen geselecteerd worden. Als er nog geen grap getoond werd, worden er geen parameters doorgegeven.</p>
+<p>Schakel voor de persistentie over naar LiteDB: vervang de in-memory repository door een <code>LiteDBJokeRepository</code> via de DI-container. De rest van de applicatie mag hier niets van merken.</p>
 </div>
 </div>
 </div>

@@ -100,10 +100,13 @@
     <a class="nav-link" href="20-maui_basics.html">Basis</a>
   </li>
       <li class="nav-item is-active is-current-page" data-depth="2">
-    <a class="nav-link" href="21-maui_ioc-di.html">IoC &amp; DI</a>
+    <a class="nav-link" href="21-maui_ioc-di.html">IoC, DI &amp; repository</a>
   </li>
       <li class="nav-item is-active" data-depth="2">
-    <a class="nav-link" href="22-maui_mvvm.html">MVVM &amp; Navigatie</a>
+    <a class="nav-link" href="22-maui_mvvm.html">MVVM &amp; opslag</a>
+  </li>
+      <li class="nav-item is-active" data-depth="2">
+    <a class="nav-link" href="23-maui_webapi.html">Navigatie &amp; berichten</a>
   </li>
 </ul>
   </li>
@@ -133,7 +136,7 @@
   <ul>
     <li><a href="index.html">Softwareontwerp 2</a></li>
     <li>MAUI</li>
-    <li><a href="21-maui_ioc-di.html">IoC &amp; DI</a></li>
+    <li><a href="21-maui_ioc-di.html">IoC, DI &amp; repository</a></li>
   </ul>
 </nav>
 </div>
@@ -171,8 +174,8 @@ service.AddJoke("Er zijn 10 soorten mensen. Degenen die binair begrijpen en dege
     {
         ArgumentNullException.ThrowIfNullOrEmpty(joke);
 
-        if (!JokeRespository.Exists(joke))
-            _jokeRepository.Add(name);
+        if (!_jokeRespository.Exists(joke))
+            _jokeRepository.Add(joke);
     }
 }</code></pre>
 </div>
@@ -186,6 +189,10 @@ service.AddJoke("Er zijn 10 soorten mensen. Degenen die binair begrijpen en dege
 <div class="paragraph">
 <p>De <code>JokeService</code> beslist zelf <strong>welke</strong> repository ze gebruikt en <strong>wanneer</strong> die wordt aangemaakt. Dat betekent dat <code>JokeService</code> een sterke afhankelijkheid heeft van een specifieke implementatie (<code>JokeRepository</code>). Dit beperkt onze flexibiliteit.</p>
 </div>
+<div class="paragraph">
+<p>Je kent dit probleem al uit de GRASP-les: dit is een schending van <strong>Low Coupling</strong>.
+IoC en DI zijn de concrete technieken waarmee we die koppeling in de praktijk verbreken.</p>
+</div>
 </div>
 <div class="sect2">
 <h3 id="_een_oplossing"><a class="anchor" href="#_een_oplossing"></a>Een oplossing</h3>
@@ -196,7 +203,7 @@ service.AddJoke("Er zijn 10 soorten mensen. Degenen die binair begrijpen en dege
 <div class="content">
 <pre class="highlightjs highlight"><code class="language-csharp hljs" data-lang="csharp">public class JokeService
 {
-    private readonly IJokeRepository _jokeRepository = new JokeRepository();
+    private readonly IJokeRepository _jokeRepository;
 
     public JokeService(IJokeRepository jokeRepository)
     {
@@ -285,7 +292,7 @@ MauiProgram.cs biedt een centrale plaats waar we services kunnen registreren, wa
 
         builder.UseMauiApp&lt;App&gt;();
 
-        builder.Services.AddTransient&lt;JokeService&gt;();
+        builder.Services.AddTransient&lt;IJokeService, JokeService&gt;();
         //builder.Services.AddSingleton&lt;JokeService&gt;();
         //builder.Services.AddScoped&lt;JokeService&gt;();
 
@@ -353,130 +360,13 @@ niet de pagina beslist welke JokeService gebruikt wordt, maar MAUI bepaalt wat e
 <p>In de oefening van vorige week maakten we een aparte klasse die verantwoordelijk is voor de grappen. Refactor nu de oefening van vorige week zodat deze aparte klasse via DI gebruikt wordt.</p>
 </div>
 <div class="paragraph">
-<p>We gaan  onze JokeService zelf ook gebruik laten maken van een andere component:  een repository. Deze zal dan persistentie doen of - zoals in ons geval - de lijst bijhouden in het geheugen. Op die manier wordt het ontwerp nog flexibeler en blijft elke verantwoordelijkheid netjes gescheiden.</p>
+<p>Onze <code>JokeService</code> maakt nu ook gebruik van een repository: een aparte klasse die instaat voor het bijhouden van de grappen in het geheugen. Op die manier wordt het ontwerp nog flexibeler en blijft elke verantwoordelijkheid netjes gescheiden.</p>
 </div>
 <div class="paragraph">
-<p>We kunnen nu ook een DadJokeRepository toevoegen die dezelfde interface implementeert. Door deze repository te registreren in onze DI-container in plaats van de bestaande JokeRepository, schakelt de applicatie probleemloos over naar een andere bron van grappen, zonder dat we elders code moeten aanpassen.</p>
-</div>
-</div>
-</div>
-<div class="sect1">
-<h2 id="_repository_en_data_opslag_met_litedb"><a class="anchor" href="#_repository_en_data_opslag_met_litedb"></a>Repository en data-opslag met LiteDB</h2>
-<div class="sectionbody">
-<div class="paragraph">
-<p>Tot nu toe hebben we DI gebruikt om services zoals JokeService in te pluggen.
-We kunnen hetzelfde principe toepassen voor data-opslag, via een Repository en een database zoals LiteDB.</p>
+<p>Voeg daarna een <code>DadJokeRepository</code> toe die dezelfde interface implementeert maar een vaste reeks grappen aanbiedt. Door deze te registreren in de DI-container in plaats van de bestaande <code>JokeRepository</code>, schakelt de app over naar een andere grappenbron — zonder elders code aan te passen.</p>
 </div>
 <div class="paragraph">
-<p><a href="https://www.litedb.org/">LiteDB</a> is een eenvoudige <a href="https://en.wikipedia.org/wiki/NoSQL">NoSQL-database</a> in één enkel bestand.
-Je kan er rechtstreeks C#-objecten in bewaren zonder tabellen of SQL te definiëren.</p>
-</div>
-<div class="sect2">
-<h3 id="_litedb_implementatie_van_de_repository"><a class="anchor" href="#_litedb_implementatie_van_de_repository"></a>LiteDB-implementatie van de repository</h3>
-<div class="paragraph">
-<p>We gaan nu een implementatie maken die LiteDB gebruikt.
-Je voegt ondersteuning toe voor LiteDB via NuGet in je MAUI-project.</p>
-</div>
-<div class="listingblock">
-<div class="content">
-<pre class="highlightjs highlight"><code class="language-csharp hljs" data-lang="csharp">using HoGentMauiBL.Interfaces;
-using LiteDB;
-
-namespace MauiJokesDL
-{
-    public class LiteDBJokeRepository : IJokeRespository, IDisposable
-    {
-        private const string DATABASE_LOCATION = "joke_db.db";
-
-        // Een 'record' een zeer eenvoudige manier om een data klasse te maken
-        public record Joke(string Text);
-
-        // De database connectie, dewelke we pas willen creëeren als we die gebruiken. Vandaar de 'Lazy' klasse.
-        private static Lazy&lt;LiteDatabase&gt; _database = new Lazy&lt;LiteDatabase&gt;(new LiteDatabase(DATABASE_LOCATION));
-
-        // We moeten altijd via een 'Collection' gaan, je kan dit vergelijken met een Table in gewone SQL databases
-        private ILiteCollection&lt;Joke&gt; JokeCollection
-            =&gt; _database.Value.GetCollection&lt;Joke&gt;();
-
-        public void Add(string joke)
-            =&gt; JokeCollection.Insert(new Joke(joke));
-
-
-        public bool Exists(string joke)
-            =&gt; JokeCollection.Exists(x =&gt; x.Text == joke);
-
-        public string Get(int jokeIndex)
-        {
-            // We willen een 'joke' vinden op index, hiervoor moeten we de tabel sorteren en dan de waarde pakken bij de index
-            return JokeCollection.Query()               // Start een query
-                                 .OrderBy(x =&gt; x.Text)  // Kies een sortering
-                                 .Offset(jokeIndex)     // Sla 'jokeIndex' aantal over
-                                 .Limit(1)              // Neem 1 record
-                                 .FirstOrDefault()?     // Uit de resulteren lijst, pak de eerst (er zal maar 1 zijn door de Limit)
-                                 .Text                  // Neem hiervan de Text property
-                                 ?? "";                 // Als we 'null' krijgen, geen een lege string terug
-        }
-
-        public int GetCount()
-            =&gt; JokeCollection.Count();
-
-        public void Dispose()
-        {
-            // We moeten de database connectie sluiten als ons object vernietigd wordt.
-            if (_database.IsValueCreated)
-                _database.Value.Dispose();
-        }
-    }
-}</code></pre>
-</div>
-</div>
-</div>
-<div class="sect2">
-<h3 id="_registratie_in_mauiprogram"><a class="anchor" href="#_registratie_in_mauiprogram"></a>Registratie in MauiProgram</h3>
-<div class="paragraph">
-<p>We koppelen alles opnieuw via de DI-container in MauiProgram.cs.</p>
-</div>
-<div class="listingblock">
-<div class="content">
-<pre class="highlightjs highlight"><code class="language-csharp hljs" data-lang="csharp">public static class MauiProgram
-{
-    public static MauiApp CreateMauiApp()
-    {
-        var builder = MauiApp.CreateBuilder();
-
-        ...
-
-        // We registreren via 'Singleton' omdat we willen vermijden dat we een nieuwe connectie krijgen per keer we de JokeRepository opvragen
-        builder.Services.AddSingleton&lt;IJokeRespository, LiteDBJokeRepository&gt;();
-        //builder.Services.AddTransient&lt;IJokeRespository, JokeRepository&gt;();
-
-        // JokeService gebruikt de repository via de interface
-        builder.Services.AddTransient&lt;JokeService&gt;();
-
-        ...
-
-        return builder.Build();
-    }
-}</code></pre>
-</div>
-</div>
-<div class="paragraph">
-<p>Note: LiteDbJokeRepository willen we als Singleton, want anders gaan we verschillende connecties openen naar onze LiteDb.
-* kan JokeService via DI met de repository werken,
-* en heeft de UI geen idee meer dat LiteDB bestaat.</p>
-</div>
-</div>
-<div class="sect2">
-<h3 id="_gebruik_in_de_maui_pagina"><a class="anchor" href="#_gebruik_in_de_maui_pagina"></a>Gebruik in de MAUI-pagina</h3>
-<div class="paragraph">
-<p>Voor de pagina verandert er niets: we injecteren nog altijd JokeService, maar die werkt nu met een echte database.</p>
-</div>
-</div>
-<div class="sect2">
-<h3 id="_oefening_2"><a class="anchor" href="#_oefening_2"></a>Oefening</h3>
-<div class="paragraph">
-<p>Als de gebruiker de willekeurig getoonde grap niet leuk vind dan moet hij deze kunnen verwijderen. Hiervoor voeg je een knop toe aan het bovenste deel van het scherm. Wanneer hierop geklikt wordt dan zal hij, via de JokeService, de grap verwijderen. Dit moet zowel werken voor de JokeRepository, als voor de LiteDBJokeRepository. Aan de bestaande interface methoden wijzigt er niks, je voegt gewoon 1 extra toe.</p>
-</div>
+<p>Voeg tot slot een knop toe waarmee de gebruiker de getoonde grap kan verwijderen. De verwijdering verloopt via de <code>JokeService</code> en de repository. Voeg hiervoor één extra methode toe aan de bestaande interface.</p>
 </div>
 </div>
 </div>
