@@ -618,7 +618,7 @@ Afhankelijk van je C# kennis, kan de logica binnen de BewonerFactory een beetje 
         return r.Next(4) switch
         {
             0 =&gt; new Prinses(naam, MaakWillekeurigeString(50)),
-            1 =&gt; new Ridder(v, 1),
+            1 =&gt; new Ridder(naam, 1),
             2 =&gt; new Stalknecht(naam),
             3 =&gt; new Kok(naam, MaakWillekeurigeString(30)),
             _ =&gt; throw new Exception()

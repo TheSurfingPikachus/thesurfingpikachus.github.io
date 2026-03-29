@@ -996,10 +996,10 @@ Kan ook als static klasse, hangt van de context af. Bij voorkeur proberen we wel
 
     public override void Update(GameTime gameTime)
     {
-        if (_inputService.ShouldGoRight())
+        if (_input.ShouldGoRight())
             UpdatePositionX(+Speed);
 
-        if (_inputService.ShouldGoLeft())
+        if (_input.ShouldGoLeft())
             UpdatePositionX(-Speed);
 
         ...

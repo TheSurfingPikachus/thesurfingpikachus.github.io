@@ -314,7 +314,7 @@ Ze specifieert de naam (<code>Kastelen</code>) en visibiliteit  (<code>+ &#8658;
     public int Breedte {get; private set;}
     public int Hoogte {get; private set;}
 
-    public List&lt;Kasteel&gt; Kastelen {get, private set;} <i class="conum" data-value="1"></i><b>(1)</b>
+    public List&lt;Kasteel&gt; Kastelen {get; private set;} <i class="conum" data-value="1"></i><b>(1)</b>
 
     public Raster(int b, int h) {
         Breedte = b;
@@ -601,7 +601,7 @@ kasteel1.Prinses = new Prinses("Pruts", "Eet graag taartjes");
 kasteel1.Ridders.Add(new Ridder("Rand", 150));
 kasteel1.Ridders.Add(new Ridder("Mat", 130));
 kasteel1.Ridders.Add(new Ridder("Perrin", 140));
-kasteel1.Koks.Add(new Kok("Loial", "A volonté");
+kasteel1.Koks.Add(new Kok("Loial", "A volonté"));
 raster.Kastelen.Add(kasteel1);
 
 var kasteel2 = new Kasteel( new Coordinate(1,0), 3, Color.Blue );
@@ -775,7 +775,7 @@ kasteel1.Bewoners.Add(new Prinses("Pruts", "Eet graag taartjes"));
 kasteel1.Bewoners.Add(new Ridder("Rand", 150));
 kasteel1.Bewoners.Add(new Ridder("Mat", 130));
 kasteel1.Bewoners.Add(new Ridder("Perrin", 140));
-kasteel1.Bewoners.Add(new Kok("Loial", "A volonté");
+kasteel1.Bewoners.Add(new Kok("Loial", "A volonté"));
 raster.Kastelen.Add(kasteel1);
 
 var kasteel2 = new Kasteel( new Coordinate(1,0), 3, Color.Blue );
